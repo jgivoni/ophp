@@ -1,5 +1,7 @@
 <?php
 
+namespace Ophp;
+
 class ControllerDecorator implements ControllerInterface {
 	protected $decoratedController;
 	
@@ -18,10 +20,10 @@ class ControllerDecorator implements ControllerInterface {
 	
 	/**
 	 *
-	 * @param Response $res
-	 * @return Response 
+	 * @param HttpResponse $res
+	 * @return HttpResponse 
 	 */
-	public function afterInvoke(Response $res) {
+	public function afterInvoke(HttpResponse $res) {
 		return $res;
 	}
 }

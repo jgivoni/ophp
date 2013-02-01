@@ -1,4 +1,15 @@
 <?php
+
+namespace Ophp;
+
+/**
+ * Standardized mapping between data storage and model
+ * 
+ * This data mapper should be stateless and not hold any information particular to a
+ * specific mapping request.
+ * One data mapper per model class is meant to be shared between all models using the 
+ * same database adapter
+ */
 abstract class DataMapper {
 	/**
 	 * @var SqlDatabaseAdapterInterface
@@ -62,10 +73,12 @@ abstract class DataMapper {
 				->run();
 				
 		if ($recordSet->isEmpty()) {
-			throw new OutOfBoundsException('Row not found');
+			throw new \OutOfBoundsException('Row not found');
 		}
 		
-		return $this->mapRowToModel($recordSet->first());
+		$model = $this->mapRowToModel($recordSet->first());
+		$this->setSharedModel($model);
+		return $model;
 	}
 	
 	/**
@@ -76,7 +89,6 @@ abstract class DataMapper {
 		$recordSet = $this->dba
 				->select($this->fields)
 				->from("`{$this->tableName}`")
-				->orderBy('position')
 				->run();
 				
 		$models = array();

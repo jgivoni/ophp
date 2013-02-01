@@ -1,6 +1,8 @@
 <?php
 
-class HtmlResponse extends Response {
+namespace Ophp;
+
+class HtmlResponse extends HttpResponse {
 	public $type = 'html';
 	
 	public function __construct() {

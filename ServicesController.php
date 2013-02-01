@@ -1,6 +1,6 @@
 <?php
 
-
+namespace Ophp;
 
 abstract class ServicesController implements ControllerInterface {
 	

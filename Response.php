@@ -1,9 +1,11 @@
 <?php
 
+namespace Ophp;
+
 /**
- * This is an http response
+ * Encapsulates a generic http response
  */
-class Response {
+class HttpResponse {
 	const STATUS_OK = '200 OK';
 	const STATUS_NOT_FOUND = '404 Not Found';
 	const STATUS_INTERNAL_SERVER_ERROR = '500 Internal Server Error';
@@ -18,7 +20,7 @@ class Response {
 	 * Chainable
 	 * 
 	 * @param string $body 
-	 * @return Response This object
+	 * @return HttpResponse This object
 	 */
 	public function body($body) {
 		$this->body = (string)$body;
@@ -43,7 +45,7 @@ class Response {
 	 * 
 	 * NB: This method does not stop script execution
 	 * 
-	 * @return Response This object for chaining
+	 * @return HttpResponse This object for chaining
 	 * @todo Control response status header (301/302)
 	 */
 	public function redirect($url) {

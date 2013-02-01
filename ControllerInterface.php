@@ -1,5 +1,7 @@
 <?php
 
+namespace Ophp;
+
 /**
  * A controller takes a request and returns a response
  * 

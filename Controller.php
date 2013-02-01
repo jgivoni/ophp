@@ -1,29 +1,20 @@
 <?php
 
+namespace Ophp;
+
 abstract class Controller implements ControllerInterface {
-	
-	const RESPONSE_HTML = 1;
-	const RESPONSE_REDIRECT = 2;
-	
-	/**
-	 * @var SqlDatabaseAdapterInterface
-	 */
-	private $dba;
 	
 	/**
 	 * @var Server The server object that spawned the controller
 	 */
 	private $server;
 	
-	protected $dataMappers = array();
-
 	public function __construct() {
 	}
 	
 	public function setServer(Server $server) {
 		$this->server = $server;
 	}
-	
 	
 	/**
 	 *
@@ -41,5 +32,13 @@ abstract class Controller implements ControllerInterface {
 		return $this->getServer()->getRequest();
 	}
 
+	/**
+	 * Return a new response object depending on the request type
+	 * @return \Ophp\HttpResponse
+	 */
+	protected function newResponse() {
+		$res = !$this->getRequest()->isAjax() ? new \Ophp\HtmlResponse : new \Ophp\JsonResponse;
+		return $res;
+	}
 	
 }

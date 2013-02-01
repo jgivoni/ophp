@@ -1,5 +1,7 @@
 <?php
 
+namespace Ophp;
+
 /**
  * A router takes a url and finds a controller that will handle the request
  *  
@@ -30,10 +32,10 @@ abstract class Router {
 	 * The router loops through the routes in its list and traverses recursively down the first one that matches
 	 * until a controller is found.
 	 * 
-	 * @param Request $req
+	 * @param HttpRequest $req
 	 * @return BaseController
 	 */
-	abstract function getController(Request $req);
+	abstract function getController(HttpRequest $req);
 	
 	/**
 	 * Reverse route lookup
@@ -63,10 +65,10 @@ class UrlRouter extends Router {
 	/**
 	 * Returns the controller of the first matching route, based only on the url
 	 * 
-	 * @param Request $req
+	 * @param HttpRequest $req
 	 * @return Controller
 	 */
-	public function getController(Request $req) {
+	public function getController(HttpRequest $req) {
 		foreach ($this->routes as $route) {
 			$matches = $route->matches($req->url);
 			if ($matches !== false) {
@@ -78,6 +80,6 @@ class UrlRouter extends Router {
 				}
 			}
 		}
-		throw new Exception('No route found for url: '.$req->url);
+		throw new \Exception('No route found for url: '.$req->url);
 	}
 }

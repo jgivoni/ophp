@@ -1,5 +1,7 @@
 <?php
 
+namespace Ophp;
+
 class VesselException extends Exception 
 { 
 	var $pars = array();

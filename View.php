@@ -1,6 +1,6 @@
 <?php
 
-namespace {
+namespace Ophp {
 
 	class View {
 

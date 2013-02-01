@@ -1,12 +1,14 @@
 <?php
 
+namespace Ophp;
+
 class HtmlDocumentView extends View {
 	
 	protected $newViewFunction;
 	protected $css_link_elem_view;
 	protected $css_files = array(); 
 	
-	public function __construct($template, Closure $newViewFunction) {
+	public function __construct($template, \Closure $newViewFunction) {
 		parent::__construct($template);
 		$this->newViewFunction = $newViewFunction;
 		$this->css_link_elem_view = $this->newView('elements/link.html');

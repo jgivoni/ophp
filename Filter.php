@@ -1,5 +1,7 @@
 <?php
 
+namespace Ophp;
+
 /**
  * A filter validates and sanitized a set of data
  * 

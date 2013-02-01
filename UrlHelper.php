@@ -1,5 +1,7 @@
 <?php
 
+namespace Ophp;
+
 class UrlHelper {
 	protected $baseUrl;
 	protected $paths = array();

@@ -1,5 +1,7 @@
 <?php
 
+namespace Ophp;
+
 class InputParams {
 	protected $params = array();
 	

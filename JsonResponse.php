@@ -1,6 +1,8 @@
 <?php
 
-class JsonResponse extends Response {
+namespace Ophp;
+
+class JsonResponse extends HttpResponse {
 	public $type = 'json';
 	
 	public function __construct() {

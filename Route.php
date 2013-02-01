@@ -1,5 +1,7 @@
 <?php
 
+namespace Ophp;
+
 /**
  * A route parses a url and determines if its controller will handle it
  * The route might also add parameters to the request determined by the url, if matched
