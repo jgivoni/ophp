@@ -31,6 +31,8 @@ class CorePackage {
 				__NAMESPACE__.'\DataMapper' => 'DataMapper.php',
 				__NAMESPACE__.'\Filter' => 'Filter.php',
 				__NAMESPACE__.'\UrlHelper' => 'UrlHelper.php',
+				__NAMESPACE__.'\ViewContext\HtmlContext' => 'view-helpers/HtmlContext.php',
+				__NAMESPACE__.'\ContextOutputter' => 'ContextOutputter.php',
 			);
 			if (isset($paths[$class])) {
 				require_once __DIR__.'/'.$paths[$class];
