@@ -21,7 +21,7 @@ class ContextOutputter {
 	}
 
 	public function attrVal() {
-		echo htmlentities($this->value, ENT_QUOTES, 'UTF-8');
+		echo htmlspecialchars($this->value, ENT_QUOTES, 'UTF-8');
 		return $this;
 	}
 	
