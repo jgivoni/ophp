@@ -2,13 +2,17 @@
 
 namespace Ophp;
 
-class ContextOutputter {
+class ViewPrinter {
 
 	protected $value;
 
 	public function __invoke($value) {
-		$this->value = $value;
-		return $this;
+		if ($value instanceof ViewPrinter) {
+			return $value;
+		} else {
+			$this->value = $value;
+			return $this;
+		}
 	}
 
 	public function chData() {
@@ -16,7 +20,7 @@ class ContextOutputter {
 	}
 
 	public function html() {
-		echo $this->value;
+		echo (string) $this->value;
 		return $this;
 	}
 

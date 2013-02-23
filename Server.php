@@ -20,7 +20,13 @@ class Server {
 	 * This is used at the moment to specify the path to the view scripts,
 	 */
 	protected $appRootPath;
-	public $base_url;
+	
+	/**
+	 * Base url of application with trailing slash if it's a directory
+	 * 
+	 * @var string
+	 */
+	protected $baseUrl;
 
 	/**
 	 * The router object that manages a list of routes
@@ -49,7 +55,7 @@ class Server {
 	 */
 	public function __construct($appRootPath) {
 		$this->setAppRootPath($appRootPath);
-		$this->base_url = apache_getenv('vessel.base_url'); // @todo Autodetect if missing
+		$this->baseUrl = apache_getenv('vessel.base_url'); // @todo Autodetect if missing
 		$this->setEnvironment(apache_getenv('vessel.environment'));
 	}
 
@@ -93,7 +99,7 @@ class Server {
 			$response->status(HttpResponse::STATUS_INTERNAL_SERVER_ERROR);
 			$response->header('Content-Type', 'text/plain');
 			if ($this->isDevelopment()) {
-				$response->body($e->getMessage());
+				$response->body($e->getMessage() . $e->getTraceAsString());
 			} else {
 				$response->body('This is not working...');
 			}
@@ -202,7 +208,7 @@ class Server {
 		if (isset($this->urlHelper)) {
 			return $this->urlHelper;
 		} else {
-			$this->urlHelper = new UrlHelper($this->base_url);
+			$this->urlHelper = new UrlHelper($this->baseUrl);
 			$config = $this->getConfig();
 			foreach ($config['paths'] as $key => $path) {
 				$this->urlHelper->$key = $path;

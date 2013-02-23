@@ -45,7 +45,7 @@ class HtmlDocumentView extends View {
 		foreach ($this->css_files as $path) {
 			$head[] = $this->css_link_elem_view->assign(array('path' => $path))->render();
 		}
-		$head[] = '<script type="text/javascript" src="/static/task/tasks.js"></script>';
+		$head[] = '<script type="text/javascript" src="/static-assets/task/tasks.js"></script>';
 				
 		$this->head = $head;
 		return parent::render();

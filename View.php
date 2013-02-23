@@ -7,7 +7,7 @@ class View {
 	protected $template;
 	protected $params = array();
 	protected $renderedView;
-	protected $contextOutputter;
+	protected $viewPrinter;
 	
 	public function __construct($template) {
 		$this->template = $template;
@@ -32,7 +32,7 @@ class View {
 	 * @return string The rendered template
 	 */
 	public function render() {
-		$c = $this->getContextOutputter();
+		$p = $this->getViewPrinter();
 		extract($this->params);
 		ob_start();
 		include $this->template;
@@ -43,10 +43,10 @@ class View {
 		return isset($this->renderedView) ? $this->renderedView : $this->render();
 	}
 	
-	protected function getContextOutputter() {
-		return isset($this->contextOutputter) ? 
-			$this->contextOutputter :
-			$this->contextOutputter = new ContextOutputter;
+	protected function getViewPrinter() {
+		return isset($this->viewPrinter) ? 
+			$this->viewPrinter :
+			$this->viewPrinter = new ViewPrinter;
 	}
 
 	// Iterator interface
@@ -67,7 +67,7 @@ class View {
 	}*/
 }
 
-class PartialView extends View {
+class ViewFragment extends View {
 
 	protected $parent;
 
@@ -76,6 +76,11 @@ class PartialView extends View {
 		$this->parent->assign(array($assignAs => $this));
 	}
 
+
+	protected function fragment($template) {
+		return $this->parent->newView($template);
+	}
+	
 	/**
 	 * Tries to render from the top view, but avoiding infinite recursion...
 	 * 

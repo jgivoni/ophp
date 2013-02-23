@@ -5,6 +5,7 @@ namespace Ophp;
 class CorePackage {
 	public function __construct() {
 		$this->bootstrap();
+		new FilterPackage;
 	}
 	
 	protected function bootstrap() {
@@ -26,13 +27,13 @@ class CorePackage {
 				__NAMESPACE__.'\Controller' => 'Controller.php',
 				__NAMESPACE__.'\Model' => 'Model.php',
 				__NAMESPACE__.'\View' => 'View.php',
-				__NAMESPACE__.'\PartialView' => 'View.php',
+				__NAMESPACE__.'\ViewFragment' => 'View.php',
 				__NAMESPACE__.'\HtmlDocumentView' => 'HtmlDocumentView.php',
 				__NAMESPACE__.'\DataMapper' => 'DataMapper.php',
-				__NAMESPACE__.'\Filter' => 'Filter.php',
 				__NAMESPACE__.'\UrlHelper' => 'UrlHelper.php',
 				__NAMESPACE__.'\ViewContext\HtmlContext' => 'view-helpers/HtmlContext.php',
-				__NAMESPACE__.'\ContextOutputter' => 'ContextOutputter.php',
+				__NAMESPACE__.'\ViewPrinter' => 'ViewPrinter.php',
+				__NAMESPACE__.'\FilterPackage' => 'filter/FilterPackage.php',
 			);
 			if (isset($paths[$class])) {
 				require_once __DIR__.'/'.$paths[$class];
