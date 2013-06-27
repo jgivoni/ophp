@@ -99,7 +99,7 @@ class Server {
 			$response->status(HttpResponse::STATUS_INTERNAL_SERVER_ERROR);
 			$response->header('Content-Type', 'text/plain');
 			if ($this->isDevelopment()) {
-				$response->body($e->getMessage() . $e->getTraceAsString());
+				$response->body($e->getMessage() . "\n" . $e->getTraceAsString());
 			} else {
 				$response->body('This is not working...');
 			}

@@ -35,7 +35,7 @@ abstract class DataMapper {
 	 * 
 	 * @return Model
 	 */
-	abstract protected function newModel();
+	abstract public function newModel();
 	
 	/**
 	 * Returns a reusable model of the data corresponding to the primary key

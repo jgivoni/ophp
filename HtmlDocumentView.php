@@ -2,18 +2,51 @@
 
 namespace Ophp;
 
+/**
+ * View for an entire html document (as opposed to just a fragment)
+ * 
+ * Understands certain parts of an html document and contains logic to populate
+ * them.
+ * 
+ */
 class HtmlDocumentView extends View {
 	
+	/**
+	 * Closure that will return a new view - needs to be passed in by the controller
+	 * @var Closure
+	 */
 	protected $newViewFunction;
-	protected $css_link_elem_view;
-	protected $css_files = array(); 
 	
+	/**
+	 * View for a css <link> element
+	 * @var View
+	 */
+	protected $cssLinkElemView;
+	
+	/**
+	 * Collection of css files to include in the document
+	 * @var array
+	 */
+	protected $cssFiles = array(); 
+	
+	/**
+	 * Creates a new html document view
+	 * @param string $template Full template file path + name
+	 * @param \Closure $newViewFunction
+	 */
 	public function __construct($template, \Closure $newViewFunction) {
 		parent::__construct($template);
 		$this->newViewFunction = $newViewFunction;
-		$this->css_link_elem_view = $this->newView('elements/link.html');
+		$this->cssLinkElemView = $this->newView('elements/link.html');
 	}
 	
+	/**
+	 * Returns a new sub view and attaches it to this document
+	 * The view is created via a closure passed in from the controller
+	 * in order not to worry the view about global template paths.
+	 * @param string $template
+	 * @return View
+	 */
 	public function newView($template) {
 		$newViewFunction = $this->newViewFunction;
 		$view = $newViewFunction($template);
@@ -31,7 +64,7 @@ class HtmlDocumentView extends View {
 	}
 	
 	public function addCssFile($path) {
-		$this->css_files[] = $path; 
+		$this->cssFiles[] = $path; 
 		
 	}
 	
@@ -42,8 +75,8 @@ class HtmlDocumentView extends View {
 	public function render() {
 		$head = array();
 		
-		foreach ($this->css_files as $path) {
-			$head[] = $this->css_link_elem_view->assign(array('path' => $path))->render();
+		foreach ($this->cssFiles as $path) {
+			$head[] = $this->cssLinkElemView->assign(array('path' => $path))->render();
 		}
 		$head[] = '<script type="text/javascript" src="/static-assets/task/tasks.js"></script>';
 				

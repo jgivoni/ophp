@@ -76,7 +76,6 @@ class ViewFragment extends View {
 		$this->parent->assign(array($assignAs => $this));
 	}
 
-
 	protected function fragment($template) {
 		return $this->parent->newView($template);
 	}
@@ -88,7 +87,11 @@ class ViewFragment extends View {
 	 */
 	public function render() {
 		parent::render();
-		return $this->parent->render();
+		if (isset($this->parent)) {
+			return $this->parent->render();
+		} else {
+			return $this->renderedView;
+		}
 	}
 
 	// Iterator interface
@@ -109,6 +112,3 @@ class ViewFragment extends View {
 	}
 }
 
-class ViewDecorator {
-
-}
