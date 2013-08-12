@@ -12,6 +12,7 @@ class CorePackage {
 		spl_autoload_register(function($class){
 			$paths = array(
 				__NAMESPACE__.'\Server' => 'Server.php',
+				__NAMESPACE__.'\Config' => 'Config.php',
 				__NAMESPACE__.'\Route' => 'Route.php',
 				__NAMESPACE__.'\RegexRoute' => 'RegexRoute.php',
 				__NAMESPACE__.'\BaseRoute' => 'Route.php',

@@ -11,9 +11,9 @@ namespace Ophp;
  */
 class Server {
 
-	const ENVIRONMENT_DEVELOPMENT = 'development';
-	const ENVIRONMENT_STAGING = 'staging';
-	const ENVIRONMENT_PRODUCTION = 'production';
+	const RUNMODE_DEVELOPMENT = 'development';
+	const RUNMODE_STAGING = 'staging';
+	const RUNMODE_PRODUCTION = 'production';
 
 	/**
 	 * The app root base path
@@ -47,7 +47,7 @@ class Server {
 	 *
 	 * @var string Key defining the type of environment (development, production, staging etc.)
 	 */
-	protected $environment = self::ENVIRONMENT_DEVELOPMENT;
+	protected $runMode = self::RUNMODE_DEVELOPMENT;
 	protected $urlHelper;
 
 	/**
@@ -55,8 +55,10 @@ class Server {
 	 */
 	public function __construct($appRootPath) {
 		$this->setAppRootPath($appRootPath);
-		$this->baseUrl = apache_getenv('vessel.base_url'); // @todo Autodetect if missing
-		$this->setEnvironment(apache_getenv('vessel.environment'));
+		$config = $this->getConfig();
+		
+		$this->baseUrl = $config->baseUrl;
+		$this->setRunMode($config->runMode);
 	}
 
 	public function setAppRootPath($appRootPath) {
@@ -168,7 +170,7 @@ class Server {
 
 	public function newMysqlDatabaseAdapter($key) {
 		$config = $this->getConfig();
-		$db = $config['database_connections'][$key];
+		$db = $config->databaseConnections[$key];
 		return new MysqlDatabaseAdapter($db['host'], $db['database'], $db['user'], $db['password']);
 	}
 
@@ -182,7 +184,7 @@ class Server {
 	 * @return type
 	 */
 	protected function loadConfig() {
-		$this->config = include $this->getAppRootPath() . '/config/' . $this->getEnvironment() . '.php';
+		$this->config = new \EnvironmentConfig;
 		return $this->config;
 	}
 
@@ -190,18 +192,18 @@ class Server {
 		return $this->request;
 	}
 
-	public function setEnvironment($environment) {
-		if (!empty($environment)) {
-			$this->environment = $environment;
+	public function setRunMode($runMode) {
+		if (!empty($runMode)) {
+			$this->runMode = $runMode;
 		}
 	}
 
-	public function getEnvironment() {
-		return $this->environment;
+	public function getRunMode() {
+		return $this->runMode;
 	}
 
 	public function isDevelopment() {
-		return $this->getEnvironment() === self::ENVIRONMENT_DEVELOPMENT;
+		return $this->getRunMode() === self::RUNMODE_DEVELOPMENT;
 	}
 
 	public function getUrlHelper() {
@@ -210,7 +212,7 @@ class Server {
 		} else {
 			$this->urlHelper = new UrlHelper($this->baseUrl);
 			$config = $this->getConfig();
-			foreach ($config['paths'] as $key => $path) {
+			foreach ($config->paths as $key => $path) {
 				$this->urlHelper->$key = $path;
 			}
 			return $this->urlHelper;
