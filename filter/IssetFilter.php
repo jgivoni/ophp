@@ -2,7 +2,7 @@
 
 namespace Ophp;
 
-class RequiredFilter extends Filter
+class IssetFilter extends Filter
 {
 	public function prep($value)
 	{
@@ -17,6 +17,11 @@ class RequiredFilter extends Filter
 	public function sanitize($value)
 	{
 		throw new \Exception('There is no way to sanitize a missing required parameter');
+	}
+	
+	public function getMessage()
+	{
+		return 'Value not set';
 	}
 
 }

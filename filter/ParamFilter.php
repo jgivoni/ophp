@@ -41,5 +41,10 @@ class ParamFilter extends Filter
 		$value = isset($params[$this->key]) ? $params[$this->key] : null;
 		return $this->filter->sanitize($value);
 	}
+	
+	public function getMessage()
+	{
+		return $this->filter->getMessage();
+	}
 
 }

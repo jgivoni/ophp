@@ -13,6 +13,8 @@ class AggregateFilter extends Filter
 	 * @var array List of filters
 	 */
 	protected $filters = array();
+	
+	protected $invalidFilter;
 
 	/**
 	 * Adds a filter to the list of filters
@@ -36,7 +38,8 @@ class AggregateFilter extends Filter
 	public function check($value)
 	{
 		foreach ($this->filters as $filter) {
-			if (!$filter->isValid($value)) {
+			if (!$filter->check($value)) {
+				$this->invalidFilter = $filter;
 				return false;
 			}
 		}
@@ -51,4 +54,8 @@ class AggregateFilter extends Filter
 		return $value;
 	}
 
+	public function getMessage()
+	{
+		return $this->invalidFilter->getMessage();
+	}
 }

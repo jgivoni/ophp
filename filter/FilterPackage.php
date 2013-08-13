@@ -17,7 +17,8 @@ class FilterPackage {
 				__NAMESPACE__.'\ParamFilter' => 'ParamFilter.php',
 				__NAMESPACE__.'\DependencyFilter' => 'DependencyFilter.php',
 				__NAMESPACE__.'\MutualDependencyFilter' => 'MutualDependencyFilter.php',
-				__NAMESPACE__.'\RequiredFilter' => 'RequiredFilter.php',
+				__NAMESPACE__.'\IssetFilter' => 'IssetFilter.php',
+				__NAMESPACE__.'\StringFilter' => 'StringFilter.php',
 				__NAMESPACE__.'\StrMaxLengthFilter' => 'StrMaxLengthFilter.php',
 				__NAMESPACE__.'\EnumFilter' => 'EnumFilter.php',
 			);

@@ -26,5 +26,10 @@ class StrMaxLengthFilter extends Filter
 	{
 		return mb_substr($value, 0, $this->length);
 	}
+	
+	public function getMessage()
+	{
+		return 'String too long';
+	}
 
 }
