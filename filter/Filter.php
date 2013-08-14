@@ -90,6 +90,9 @@ abstract class Filter implements FilterInterface
 			}
 			$this->wellFormedIsValid = $this->check($this->wellFormedValue);
 		}
+		if (!$this->wellFormedIsValid) {
+			$this->message = $this->getMessage();
+		}
 		return $this->wellFormedIsValid;
 	}
 
@@ -105,5 +108,14 @@ abstract class Filter implements FilterInterface
 		}
 		return $this->sanitizedValue;
 	}
-
+	
+	protected function getMessage()
+	{
+		return 'Invalid value';
+	}
+	
+	public function errorMessage()
+	{
+		return $this->message . ': ' . print_r($this->wellFormedValue, true);
+	}
 }

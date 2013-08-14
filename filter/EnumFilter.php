@@ -23,5 +23,10 @@ class EnumFilter extends Filter
 	{
 		return null;
 	}
+	
+	public function getMessage()
+	{
+		return "Value is not in allowed set: " . print_r($this->enumValues, true);
+	}
 
 }
