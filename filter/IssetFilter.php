@@ -2,26 +2,17 @@
 
 namespace Ophp;
 
+/**
+ * Checks if the value is set, i.e. is not null
+ */
 class IssetFilter extends Filter
 {
-	public function prep($value)
+	public function filter($value)
 	{
-		return $value;
+		if (isset($value)) {
+			return $value;
+		} else {
+			throw new \InvalidArgumentException('Value not set');
+		}
 	}
-
-	public function check($value)
-	{
-		return isset($value);
-	}
-
-	public function sanitize($value)
-	{
-		throw new \Exception('There is no way to sanitize a missing required parameter');
-	}
-	
-	public function getMessage()
-	{
-		return 'Value not set';
-	}
-
 }

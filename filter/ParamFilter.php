@@ -5,46 +5,44 @@ namespace Ophp;
 /**
  * A filter that will act on an element of an indexed array
  */
-class ParamFilter extends Filter
-{
+class ParamFilter extends Filter {
 
+	/**
+	 *
+	 * @var string
+	 */
 	protected $key;
+
+	/**
+	 *
+	 * @var Filter
+	 */
 	protected $filter;
+
+	/**
+	 *
+	 * @var ParamsFilter
+	 */
+	protected $parent;
 
 	/**
 	 * 
 	 * @param string $key They key the filter will operate on
 	 * @param \Ophp\Filter $filter
+	 * @param ParamsFilter The filter that controls all the parameters
 	 */
-	public function __construct($key, Filter $filter)
-	{
+	public function __construct($key, Filter $filter, ParamsFilter $parent = null) {
 		$this->key = $key;
 		$this->filter = $filter;
+		$this->parent = $parent;
 	}
 
-	public function prep($params)
-	{
+	public function filter($params) {
 		$value = isset($params[$this->key]) ? $params[$this->key] : null;
-		$value = $this->filter->prep($value);
+		$value = $this->filter->filter($value);
+		isset($this->parent) && $this->parent->keyFiltered($this->key);
 		$params[$this->key] = $value;
 		return $params;
-	}
-
-	public function check($params)
-	{
-		$value = isset($params[$this->key]) ? $params[$this->key] : null;
-		return $this->filter->check($value);
-	}
-
-	public function sanitize($params)
-	{
-		$value = isset($params[$this->key]) ? $params[$this->key] : null;
-		return $this->filter->sanitize($value);
-	}
-	
-	public function getMessage()
-	{
-		return $this->filter->getMessage();
 	}
 
 }

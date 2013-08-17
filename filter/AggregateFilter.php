@@ -5,57 +5,45 @@ namespace Ophp;
 /**
  * A collection of filters
  */
-class AggregateFilter extends Filter
-{
+class AggregateFilter extends Filter {
 
 	/**
 	 *
 	 * @var array List of filters
 	 */
 	protected $filters = array();
-	
-	protected $invalidFilter;
+
+	public function __construct($filters = array()) {
+		foreach ($filters as $filter) {
+			$this->addFilter($filter);
+		}
+	}
 
 	/**
 	 * Adds a filter to the list of filters
 	 * 
 	 * @param Filter $filter
 	 */
-	public function addFilter(Filter $filter)
-	{
+	public function addFilter(Filter $filter) {
 		$this->filters[] = $filter;
 		return $this;
 	}
 
-	public function prep($value)
-	{
+	public function filter($value) {
+		$lastException = null;
 		foreach ($this->filters as $filter) {
-			$filter->prep($value);
-		}
-		return $value;
-	}
-
-	public function check($value)
-	{
-		foreach ($this->filters as $filter) {
-			if (!$filter->check($value)) {
-				$this->invalidFilter = $filter;
-				return false;
+			try {
+				$value = $filter($value);
+			} catch (\InvalidArgumentException $e) {
+				// TODO: How to catch all the expections in a chain?
+				$lastException = $e;
 			}
 		}
-		return true;
-	}
-
-	public function sanitize($value)
-	{
-		foreach ($this->filters as $filter) {
-			$value = $filter->sanitize($value);
+		if (isset($lastException)) {
+			throw $lastException;
 		}
 		return $value;
 	}
 
-	public function getMessage()
-	{
-		return $this->invalidFilter->getMessage();
-	}
 }
+

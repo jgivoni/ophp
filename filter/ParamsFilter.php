@@ -7,30 +7,40 @@ namespace Ophp;
  * 
  * Each parameter must have at least one validator
  */
-class ParamsFilter extends AggregateFilter
-{
+class ParamsFilter extends AggregateFilter {
 
-	protected $keys = array();
+	/**
+	 * List of filtered keys
+	 * @var array
+	 */
+	protected $keysFiltered = array();
 
-	public function addParamFilter($key, Filter $filter)
-	{
-		$this->keys[] = $key;
-		$this->addFilter(new ParamFilter($key, $filter));
+	public function addParamFilter($key, Filter $filter) {
+		$this->addFilter(new ParamFilter($key, $filter, $this));
 	}
 
-	public function prep($value)
-	{
+	public function filter($params) {
 		// Cast as array
-		if (!is_array($value)) {
-			$value = (array) $value;
+		if (!is_array($params)) {
+			$params = (array) $params;
 		}
-		$value = parent::prep($value);
+		$params = parent::filter($params);
 
-		// Removed unexpected parameters - but how?
-		// Somehow mark when a param has been prepped
-		// Make sure that dependency filters only mark on dependencies
+		foreach ($params as $key => $param) {
+			if (!in_array($key, $this->keysFiltered)) {
+				unset($params[$key]);
+			}
+		}
+		return $params;
+	}
 
-		return $value;
+	/**
+	 * Callback function for ParamFilter to indicate that a key has been
+	 * filtered
+	 * @param string $key
+	 */
+	public function keyFiltered($key) {
+		$this->keysFiltered[] = $key;
 	}
 
 }

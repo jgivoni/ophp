@@ -2,34 +2,27 @@
 
 namespace Ophp;
 
-class StrMaxLengthFilter extends Filter
-{
+/**
+ * Checks that a string is not too long
+ */
+class StrMaxLengthFilter extends Filter {
 
+	/**
+	 *
+	 * @var int
+	 */
 	protected $length;
 
-	public function __construct($length)
-	{
+	public function __construct($length) {
 		$this->length = (int) $length;
 	}
 
-	public function prep($value)
-	{
-		return (string) $value;
-	}
-
-	public function check($value)
-	{
-		return mb_strlen($value) <= $this->length;
-	}
-
-	public function sanitize($value)
-	{
-		return mb_substr($value, 0, $this->length);
-	}
-	
-	public function getMessage()
-	{
-		return 'String too long';
+	public function filter($value) {
+		if (mb_strlen($value) <= $this->length) {
+			return $value;
+		} else {
+			throw new \InvalidArgumentException('String too long');
+		}
 	}
 
 }

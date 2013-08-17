@@ -2,29 +2,23 @@
 
 namespace Ophp;
 
-class StrTrimFilter extends Filter
-{
+/**
+ * Trims whitespace or other characters from the beginning and end of string
+ */
+class StrTrimFilter extends Filter {
 
-	protected $character;
+	/**
+	 *
+	 * @var string
+	 */
+	protected $charlist;
 
-	public function __construct($character)
-	{
-		$this->character = (string) $character;
+	public function __construct($charlist) {
+		$this->charlist = (string) $charlist;
 	}
 
-	public function prep($value)
-	{
-		return (string) trim($value, $this->character);
-	}
-
-	public function check($value)
-	{
-		return true;
-	}
-	
-	public function sanitize($value)
-	{
-		return $value;
+	public function filter($value) {
+		return trim($value, $this->charlist);
 	}
 
 }
