@@ -13,7 +13,7 @@ class StrTrimFilter extends Filter {
 	 */
 	protected $charlist;
 
-	public function __construct($charlist) {
+	public function __construct($charlist = ' ') {
 		$this->charlist = (string) $charlist;
 	}
 

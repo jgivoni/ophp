@@ -14,7 +14,7 @@ abstract class Filter implements FilterInterface {
 	 * @throws InvalidArgumentException
 	 */
 	final public function __invoke($value) {
-		return $this->filter();
+		return $this->filter($value);
 	}
 
 }
