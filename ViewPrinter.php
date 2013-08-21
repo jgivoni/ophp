@@ -6,6 +6,11 @@ class ViewPrinter {
 
 	protected $value;
 
+	/**
+	 * 
+	 * @param mixed $value
+	 * @return \Ophp\ViewPrinter
+	 */
 	public function __invoke($value) {
 		if ($value instanceof ViewPrinter) {
 			return $value;
@@ -17,6 +22,7 @@ class ViewPrinter {
 
 	public function chData() {
 		echo htmlspecialchars($this->value, ENT_NOQUOTES, 'UTF-8');
+		return $this;
 	}
 
 	public function html() {

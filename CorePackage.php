@@ -35,6 +35,8 @@ class CorePackage {
 				__NAMESPACE__.'\ViewContext\HtmlContext' => 'view-helpers/HtmlContext.php',
 				__NAMESPACE__.'\ViewPrinter' => 'ViewPrinter.php',
 				__NAMESPACE__.'\FilterPackage' => 'filter/FilterPackage.php',
+				__NAMESPACE__.'\Form' => 'forms/Form.php',
+				__NAMESPACE__.'\FormField' => 'forms/FormField.php',
 			);
 			if (isset($paths[$class])) {
 				require_once __DIR__.'/'.$paths[$class];
