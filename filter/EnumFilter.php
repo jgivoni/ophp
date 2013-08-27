@@ -14,7 +14,7 @@ class EnumFilter extends Filter {
 		if (in_array($value, $this->enumValues, true)) {
 			return $value;
 		} else {
-			throw new \InvalidArgumentException('Value is not in allowed set.');
+			throw new FilterException('Value is not in allowed set.');
 		}
 	}
 

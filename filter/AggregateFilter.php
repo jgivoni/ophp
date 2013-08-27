@@ -30,20 +30,28 @@ class AggregateFilter extends Filter {
 	}
 
 	public function filter($value) {
-		$lastException = null;
+		$exception = null;
 		foreach ($this->filters as $filter) {
 			try {
 				$value = $filter($value);
-			} catch (\InvalidArgumentException $e) {
-				// TODO: How to catch all the expections in a chain?
-				$lastException = $e;
+			} catch (FilterException $e) {
+				if (!isset($exception)) {
+					$exception = new AggregateFilterException('One or more filters violated');
+				}
+				$exception->addException($e);
 			}
 		}
-		if (isset($lastException)) {
-			throw $lastException;
+		if (isset($exception)) {
+			throw $exception;
 		}
 		return $value;
 	}
 
 }
 
+class AggregateFilterException extends FilterException {
+	protected $exceptions = array();
+	public function addException(FilterException $e) {
+		$this->exceptions[] = $e;
+	}
+}

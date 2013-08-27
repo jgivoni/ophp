@@ -27,7 +27,7 @@ class RecoveryFilter extends Filter {
 	public function filter($value) {
 		try {
 			$value = $this->ifFilter->filter($value);
-		} catch (\InvalidArgumentException $e) {
+		} catch (FilterException $e) {
 			return $this->thenFilter->filter($value);
 		}
 		return $value;

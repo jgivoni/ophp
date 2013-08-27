@@ -25,11 +25,11 @@ class StringFilter extends Filter {
 			$origValue = $value;
 			$value = (string) $value;
 			if ($type === 'int' && intval($value) !== $origValue) {
-				throw new \InvalidArgumentException('Not a string');
+				throw new FilterException('Not a string');
 			} elseif ($type === 'bool' && (bool) value !== $origValue) {
-				throw new \InvalidArgumentException('Not a string');
+				throw new FilterException('Not a string');
 			} elseif ($type === 'float' && floatval($value) !== $origValue) {
-				throw new \InvalidArgumentException('Not a string');
+				throw new FilterException('Not a string');
 			}
 		}
 

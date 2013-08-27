@@ -18,3 +18,7 @@ abstract class Filter implements FilterInterface {
 	}
 
 }
+
+class FilterException extends Exception {
+	
+}

@@ -12,6 +12,7 @@ class CorePackage {
 		spl_autoload_register(function($class){
 			$paths = array(
 				__NAMESPACE__.'\Server' => 'Server.php',
+				__NAMESPACE__.'\Exception' => 'Exception.php',
 				__NAMESPACE__.'\Config' => 'Config.php',
 				__NAMESPACE__.'\Route' => 'Route.php',
 				__NAMESPACE__.'\RegexRoute' => 'RegexRoute.php',
@@ -37,6 +38,7 @@ class CorePackage {
 				__NAMESPACE__.'\FilterPackage' => 'filter/FilterPackage.php',
 				__NAMESPACE__.'\Form' => 'forms/Form.php',
 				__NAMESPACE__.'\FormField' => 'forms/FormField.php',
+				__NAMESPACE__.'\FormFieldOption' => 'forms/FormFieldOption.php',
 			);
 			if (isset($paths[$class])) {
 				require_once __DIR__.'/'.$paths[$class];

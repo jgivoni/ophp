@@ -28,10 +28,10 @@ class MutualDependencyFilter extends Filter {
 	public function filter($value) {
 		try {
 			$value = $this->filter1->filter($value);
-		} catch (\InvalidArgumentException $e) {
+		} catch (FilterException $e) {
 			try {
 				$value = $this->filter2->filter($value);
-			} catch (\InvalidArgumentException $e) {
+			} catch (FilterException $e) {
 				return $value;
 			}
 			throw $e;

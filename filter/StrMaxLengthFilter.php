@@ -21,7 +21,7 @@ class StrMaxLengthFilter extends Filter {
 		if (mb_strlen($value) <= $this->length) {
 			return $value;
 		} else {
-			throw new \InvalidArgumentException('String too long');
+			throw new FilterException('String too long');
 		}
 	}
 

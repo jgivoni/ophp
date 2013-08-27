@@ -13,11 +13,11 @@ class IntegerFilter extends Filter {
 			$origValue = $value;
 			$value = (int) $value;
 			if ($type === 'string' && intval($value) !== $origValue) {
-				throw new \InvalidArgumentException('Not an integer');
+				throw new FilterException('Not an integer');
 			} elseif ($type === 'bool' && (bool) value !== $origValue) {
-				throw new \InvalidArgumentException('Not an integer');
+				throw new FilterException('Not an integer');
 			} elseif ($type === 'float' && floatval($value) !== $origValue) {
-				throw new \InvalidArgumentException('Not an integer');
+				throw new FilterException('Not an integer');
 			}
 		}
 		return $value;
