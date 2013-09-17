@@ -50,8 +50,14 @@ class AggregateFilter extends Filter {
 }
 
 class AggregateFilterException extends FilterException {
+
 	protected $exceptions = array();
+
 	public function addException(FilterException $e) {
 		$this->exceptions[] = $e;
+	}
+
+	public function getExceptions() {
+		return $this->exceptions;
 	}
 }

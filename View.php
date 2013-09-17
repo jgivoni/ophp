@@ -8,9 +8,27 @@ class View {
 	protected $params = array();
 	protected $renderedView;
 	protected $viewPrinter;
+	protected $newViewFunction;
+	protected $templateBase;
+	protected $parent;
 	
-	public function __construct($template) {
+	public function __construct($template, $templateBase = null) {
 		$this->template = $template;
+		if (isset($templateBase)) {
+			$this->setTemplateBase($templateBase);
+		}
+	}
+
+	public function setParent($parent) {
+		$this->parent = $parent;
+	}
+	
+	public function getParent() {
+		return $this->parent;
+	}
+	
+	public function top() {
+		return isset($this->parent) ? $this->parent : $this;
 	}
 
 	public function assign($params) {
@@ -26,6 +44,23 @@ class View {
 		return isset($this->params[$key]) ? $this->params[$key] : null;
 	}
 
+	protected function getParams()
+	{
+		return $this->params;
+	}
+		
+	public function setTemplateBase($templateBase) {
+		$this->templateBase = $templateBase;
+	}
+	
+	protected function getTemplateBase() {
+		return $this->templateBase;
+	}
+	
+	protected function getFullTemplatePath() {
+		return $this->templateBase . $this->template . '.php';
+	}
+
 	/**
 	 * Returns the rendition of the specified template with the parameters given
 	 * 
@@ -33,14 +68,20 @@ class View {
 	 */
 	public function render() {
 		$p = $this->getViewPrinter();
-		extract($this->params);
+		extract($this->getParams());
 		ob_start();
-		include $this->template;
+		include $this->getFullTemplatePath();
 		return $this->renderedView = ob_get_clean();
 	}
 
 	public function __toString() {
 		return isset($this->renderedView) ? $this->renderedView : $this->render();
+	}
+
+	public function fragment($template) {
+		$fragment = new View($template, $this->getTemplateBase());
+		$fragment->setParent($this->top());
+		return $fragment;
 	}
 	
 	protected function getViewPrinter() {
@@ -48,67 +89,4 @@ class View {
 			$this->viewPrinter :
 			$this->viewPrinter = new ViewPrinter;
 	}
-
-	// Iterator interface
-	/*public function current() {
-		return current($this->params);
-	}
-	public function key() {
-		return key($this->params);
-	}
-	public function next() {
-		return next($this->params);
-	}
-	public function rewind() {
-		return reset($this->params);
-	}
-	public function valid() {
-		return key($this->params);
-	}*/
 }
-
-class ViewFragment extends View {
-
-	protected $parent;
-
-	public function attachToParent($parentView, $assignAs) {
-		$this->parent = $parentView;
-		$this->parent->assign(array($assignAs => $this));
-	}
-
-	protected function fragment($template) {
-		return $this->parent->newView($template);
-	}
-	
-	/**
-	 * Tries to render from the top view, but avoiding infinite recursion...
-	 * 
-	 * @return string
-	 */
-	public function render() {
-		parent::render();
-		if (isset($this->parent)) {
-			return $this->parent->render();
-		} else {
-			return $this->renderedView;
-		}
-	}
-
-	// Iterator interface
-	public function current() {
-		return current($this->parent->params);
-	}
-	public function key() {
-		return key($this->parent->params);
-	}
-	public function next() {
-		return next($this->parent->params);
-	}
-	public function rewind() {
-		return reset($this->parent->params);
-	}
-	public function valid() {
-		return key($this->parent->params);
-	}
-}
-

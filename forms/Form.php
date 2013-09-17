@@ -8,6 +8,13 @@ namespace Ophp;
  */
 class Form {
 
+	const METHOD_GET = 1;
+	const METHOD_POST = 2;
+	
+	protected $name;
+	protected $method = self::METHOD_POST;
+	protected $exceptions = array();
+	
 	protected $fields = array();
 
 	public function __construct() {
@@ -24,8 +31,33 @@ class Form {
 	}
 
 	public function getField($name) {
-		return isset($this->fields[$name]) ? $this->fields[$name] : null;
+		return $this->hasField($name) ? $this->fields[$name] : null;
 	}
 
-}
+	public function hasField($name) {
+		return isset($this->fields[$name]);
+	}
+	
+	public function addExceptions($exceptions = array()) {
+		foreach ($exceptions as $key => $exception) {
+			if ($this->hasField($key)) {
+				$this->getField($key)->addException($exception);
+			} else {
+				$this->addException($exception);
+			}
+		}
+	}
+	
+	public function addException($exception) {
+		$this->exceptions[] = $exception;
+		return $this;
+	}
+	
+	public function hasExceptions() {
+		return !empty($this->exceptions);
+	}
 
+	public function getExceptions() {
+		return $this->exceptions;
+	}
+}

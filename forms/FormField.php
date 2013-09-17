@@ -10,14 +10,17 @@ class FormField {
 	
 	protected $name;
 	protected $value;
+	protected $label;
 	protected $type;
 	protected $options;
+	protected $exceptions;
 
 	public function __construct($name = null) {
 		if (isset($name)) {
 			$this->setName($name);
 		}
 	}
+	
 	public function setName($name) {
 		$this->name = (string) $name;
 		return $this;
@@ -33,6 +36,15 @@ class FormField {
 	}
 	public function getValue() {
 		return $this->value;
+	}
+
+	public function setLabel($label) {
+		$this->label = $label;
+		return $this;
+	}
+	
+	public function getLabel() {
+		return $this->label;
 	}
 
 	public function setType($type) {
@@ -53,4 +65,12 @@ class FormField {
 		return $this->options;
 	}
 
+	public function addException($exception) {
+		$this->exceptions[] = $exception;
+		return $this;
+	}
+	
+	public function getExceptions() {
+		return $this->exceptions;
+	}
 }
