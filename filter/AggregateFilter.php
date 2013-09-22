@@ -55,6 +55,7 @@ class AggregateFilterException extends FilterException {
 
 	public function addException(FilterException $e) {
 		$this->exceptions[] = $e;
+		return $this;
 	}
 
 	public function getExceptions() {

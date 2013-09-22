@@ -12,7 +12,7 @@ namespace Ophp;
  */
 abstract class DataMapper {
 	/**
-	 * @var SqlDatabaseAdapterInterface
+	 * @var MySqlDatabaseAdapter
 	 */
 	protected $dba;
 	protected $sharedModels = array();
@@ -59,17 +59,12 @@ abstract class DataMapper {
 		return $this;
 	}
 
-	/**
-	 * 
-	 * @param mixed $pk
-	 * @return Model
-	 * @throws Exception
-	 */
-	public function loadByPrimaryKey($pk) {
-		$recordSet = $this->dba
-				->select($this->fields)
+	public function loadOne(SqlQueryBuilder $query = null) {
+		if (!isset($query)) {
+			$query = $this->dba->select();
+		}
+		$recordSet = $query->select($this->fields)
 				->from("`{$this->tableName}`")
-				->where('`'.$this->fields[$this->primaryKey].'` = '.(int)$pk)
 				->run();
 				
 		if ($recordSet->isEmpty()) {
@@ -83,14 +78,33 @@ abstract class DataMapper {
 	
 	/**
 	 * 
+	 * @param mixed $pk
+	 * @return Model
+	 * @throws Exception
+	 */
+	public function loadByPrimaryKey($pk) {
+		$query = $this->dba->select()
+				->where('`'.$this->fields[$this->primaryKey].'` = '.(int)$pk);
+		return $this->loadOne($query);
+	}
+	
+	/**
+	 * 
 	 * @return array Of Model
 	 */
-	public function loadAll() {
-		$recordSet = $this->dba
+	public function loadAll(SqlQueryBuilder_Select $query = null) {
+		if (!isset($query)) {
+			$query = $this->dba->select();
+		}
+		
+		$recordSet = $query
 				->select($this->fields)
+				->countMatchedRows()
 				->from("`{$this->tableName}`")
 				->run();
 				
+		var_dump($recordSet);
+		var_dump($recordSet->getMatchedRows());die;
 		$models = array();
 		foreach ($recordSet as $record) {
 			$model = $this->mapRowToModel($record);
@@ -98,6 +112,32 @@ abstract class DataMapper {
 			$models[] = $model;
 		}
 		return $models;
+	}
+	
+	/**
+	 * Deletes a row
+	 * 
+	 * @param \Ophp\Model $model
+	 */
+	public function deleteByModel(Model $model)
+	{
+		$sql = $this->dba->delete()
+				->where("`{$this->fields[$this->primaryKey]}` = " . $model->{$this->primaryKey});
+		$result = $this->deleteByQuery($sql);
+		if ($result->getNumRows() !== 1) {
+			throw new Exception('Row not found');
+		}
+		return $this;
+	}
+	
+	/**
+	 * 
+	 * @param SqlQueryBuilder_Delete $sql
+	 * @return DbQueryResult
+	 */
+	public function deleteByQuery(SqlQueryBuilder_Delete $sql) {
+		return $sql->from("`{$this->tableName}`")
+			->run();
 	}
 	
 	/**

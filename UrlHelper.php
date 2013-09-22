@@ -121,7 +121,7 @@ class UrlHelper {
 	 * @param string $path End path
 	 * @return string
 	 */
-	public function __invoke($path) {
+	public function __invoke($path = '') {
 		return (string) $this . $path;
 	}
 }

@@ -39,9 +39,12 @@ class Form {
 	}
 	
 	public function addExceptions($exceptions = array()) {
-		foreach ($exceptions as $key => $exception) {
-			if ($this->hasField($key)) {
-				$this->getField($key)->addException($exception);
+		foreach ($exceptions as $exception) {
+			if ($exception instanceof ParamFilterException) {
+				$key = $exception->getKey();
+				if ($this->hasField($key)) {
+					$this->getField($key)->addException($exception);
+				}
 			} else {
 				$this->addException($exception);
 			}
@@ -49,6 +52,9 @@ class Form {
 	}
 	
 	public function addException($exception) {
+		if ($exception instanceof AggregateFilterException) {
+			$this->addExceptions($exception->getExceptions());
+		}
 		$this->exceptions[] = $exception;
 		return $this;
 	}

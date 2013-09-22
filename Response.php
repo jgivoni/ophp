@@ -23,7 +23,7 @@ class HttpResponse {
 	 * @return HttpResponse This object
 	 */
 	public function body($body) {
-		$this->body = (string)$body;
+		$this->body = (string) $body;
 		return $this;
 	}
 	

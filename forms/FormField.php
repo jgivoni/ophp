@@ -7,7 +7,7 @@ class FormField {
 	const TYPE_TEXT = 'text';
 	const TYPE_TEXTAREA = 'textarea';
 	const TYPE_SELECT = 'select';
-	
+
 	protected $name;
 	protected $value;
 	protected $label;
@@ -20,7 +20,7 @@ class FormField {
 			$this->setName($name);
 		}
 	}
-	
+
 	public function setName($name) {
 		$this->name = (string) $name;
 		return $this;
@@ -34,6 +34,7 @@ class FormField {
 		$this->value = $value;
 		return $this;
 	}
+
 	public function getValue() {
 		return $this->value;
 	}
@@ -42,7 +43,7 @@ class FormField {
 		$this->label = $label;
 		return $this;
 	}
-	
+
 	public function getLabel() {
 		return $this->label;
 	}
@@ -55,22 +56,40 @@ class FormField {
 	public function getType() {
 		return $this->type;
 	}
-	
+
 	public function setOptions($options) {
 		$this->options = $options;
 		return $this;
 	}
-	
+
 	public function getOptions() {
 		return $this->options;
 	}
 
+	public function addExceptions($exceptions) {
+		foreach ($exceptions as $exception) {
+			$this->addException($exception);
+		}
+	}
+
 	public function addException($exception) {
-		$this->exceptions[] = $exception;
+		if ($exception instanceof ParamFilterException) {
+			$exception = $exception->getPrevious();
+		}
+		if ($exception instanceof AggregateFilterException) {
+			$this->addExceptions($exception->getExceptions());
+		} else {
+			$this->exceptions[] = $exception;
+		}
 		return $this;
 	}
-	
+
 	public function getExceptions() {
 		return $this->exceptions;
 	}
+
+	public function hasExceptions() {
+		return !empty($this->exceptions);
+	}
+
 }

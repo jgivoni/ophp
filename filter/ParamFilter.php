@@ -39,10 +39,28 @@ class ParamFilter extends Filter {
 
 	public function filter($params) {
 		$value = isset($params[$this->key]) ? $params[$this->key] : null;
-		$value = $this->filter->filter($value);
+		try {
+			$value = $this->filter->filter($value);
+		} catch (FilterException $e) {
+			$exception = new ParamFilterException('Parameter value violated', null, $e);
+			$exception->setKey($this->key);
+			throw $exception;
+		}
 		isset($this->parent) && $this->parent->keyFiltered($this->key);
 		$params[$this->key] = $value;
 		return $params;
 	}
 
+}
+
+class ParamFilterException extends FilterException {
+	protected $key;
+	public function setKey($key) {
+		$this->key = $key;
+		return $this;
+	}
+	
+	public function getKey() {
+		return $this->key;
+	}
 }
