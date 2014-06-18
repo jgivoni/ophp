@@ -11,32 +11,32 @@ namespace Ophp;
  * same database adapter
  */
 abstract class DataMapper {
+
 	/**
 	 * @var MySqlDatabaseAdapter
 	 */
 	protected $dba;
 	protected $sharedModels = array();
-	
 	protected $fields = array();
 	protected $tableName = '';
-	protected $primaryKey = ''; 
+	protected $primaryKey = '';
 
 	public function __construct() {
 		;
 	}
-	
+
 	public function setDba(SqlDatabaseAdapterInterface $dba) {
 		$this->dba = $dba;
 		return $this;
 	}
-	
+
 	/**
 	 * Returns a new instance of the model
 	 * 
 	 * @return Model
 	 */
 	abstract public function newModel();
-	
+
 	/**
 	 * Returns a reusable model of the data corresponding to the primary key
 	 * 
@@ -45,8 +45,8 @@ abstract class DataMapper {
 	 */
 	protected function getSharedModel($primaryKey) {
 		return isset($this->sharedModels[$primaryKey]) ?
-			$this->sharedModels[$primaryKey] :
-			$this->sharedModels[$primaryKey] = $this->loadModelByPrimaryKey($primaryKey);
+				$this->sharedModels[$primaryKey] :
+				$this->sharedModels[$primaryKey] = $this->loadModelByPrimaryKey($primaryKey);
 	}
 
 	/**
@@ -59,23 +59,31 @@ abstract class DataMapper {
 		return $this;
 	}
 
-	public function loadOne(SqlQueryBuilder $query = null) {
+	public function onLoad(SqlQueryBuilder_Select $query = null) {
 		if (!isset($query)) {
 			$query = $this->dba->select();
 		}
-		$recordSet = $query->select($this->fields)
-				->from("`{$this->tableName}`")
-				->run();
-				
+		$query->from("`{$this->tableName}`");
+
+		foreach ($this->fields as $name => $config) {
+			$query->select(isset($config['column']) ? $config['column'] : $name);
+		}
+		return $query;
+	}
+	
+	public function loadOne(SqlQueryBuilder_Select $query = null) {
+		$query = $this->onLoad($query);
+		$recordSet = $query->run();
+
 		if ($recordSet->isEmpty()) {
 			throw new \OutOfBoundsException('Row not found');
 		}
-		
+
 		$model = $this->mapRowToModel($recordSet->first());
 		$this->setSharedModel($model);
 		return $model;
 	}
-	
+
 	/**
 	 * 
 	 * @param mixed $pk
@@ -84,27 +92,21 @@ abstract class DataMapper {
 	 */
 	public function loadByPrimaryKey($pk) {
 		$query = $this->dba->select()
-				->where('`'.$this->fields[$this->primaryKey].'` = '.(int)$pk);
+				->where('`' . $this->getPkColumn() . '` = ' . (int) $pk);
 		return $this->loadOne($query);
 	}
-	
+
 	/**
 	 * 
 	 * @return array Of Model
 	 */
 	public function loadAll(SqlQueryBuilder_Select $query = null) {
-		if (!isset($query)) {
-			$query = $this->dba->select();
-		}
-		
-		$recordSet = $query
-				->select($this->fields)
-				->countMatchedRows()
-				->from("`{$this->tableName}`")
-				->run();
-				
-		var_dump($recordSet);
-		var_dump($recordSet->getMatchedRows());die;
+		$query = $this->onLoad($query);
+
+		$query->countMatchedRows();
+
+		$recordSet = $query->run();
+
 		$models = array();
 		foreach ($recordSet as $record) {
 			$model = $this->mapRowToModel($record);
@@ -113,14 +115,13 @@ abstract class DataMapper {
 		}
 		return $models;
 	}
-	
+
 	/**
 	 * Deletes a row
 	 * 
 	 * @param \Ophp\Model $model
 	 */
-	public function deleteByModel(Model $model)
-	{
+	public function deleteByModel(Model $model) {
 		$sql = $this->dba->delete()
 				->where("`{$this->fields[$this->primaryKey]}` = " . $model->{$this->primaryKey});
 		$result = $this->deleteByQuery($sql);
@@ -129,7 +130,7 @@ abstract class DataMapper {
 		}
 		return $this;
 	}
-	
+
 	/**
 	 * 
 	 * @param SqlQueryBuilder_Delete $sql
@@ -137,9 +138,9 @@ abstract class DataMapper {
 	 */
 	public function deleteByQuery(SqlQueryBuilder_Delete $sql) {
 		return $sql->from("`{$this->tableName}`")
-			->run();
+						->run();
 	}
-	
+
 	/**
 	 * 
 	 * @param array $row
@@ -147,11 +148,22 @@ abstract class DataMapper {
 	 */
 	protected function mapRowToModel($row) {
 		$model = $this->newModel();
-		foreach ($this->fields as $key => $name) {
-			$modelField = is_numeric($key) ? $name : $key;
-			$model[$modelField] = $row[$name];
+		foreach ($this->fields as $modelField => $config) {
+			$name = isset($config['column']) ? $config['column'] : $modelField;
+			switch ($config['type']) {
+				case 'int': isset($v) || $v = (int) $row[$name];
+				case 'timestamp': isset($v) || $v = strtotime($row[$name]);
+				default: isset($v) || $v = $row[$name];
+			}
+			$model->$modelField = $v;
+			unset($v);
 		}
 		return $model;
 	}
 
+	protected function getPkColumn() {
+		return isset($this->fields[$this->primaryKey]['column']) ?
+				$this->fields[$this->primaryKey]['column'] :
+				$this->primaryKey;
+	}
 }
