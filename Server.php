@@ -86,6 +86,9 @@ class Server {
 	 */
 	public function handleRequest(HttpRequest $req = null) {
 		try {
+			if ($this->isDevelopment()) {
+				new FirePhpPackage;
+			}
 			if (empty($req)) {
 				$req = $this->newRequest();
 				$req->setServerVars($_SERVER); // @todo Break this up into its parts
@@ -171,7 +174,11 @@ class Server {
 	public function newMysqlDatabaseAdapter($key) {
 		$config = $this->getConfig();
 		$db = $config->databaseConnections[$key];
-		return new MysqlDatabaseAdapter($db['host'], $db['database'], $db['user'], $db['password']);
+		$dba = new MysqlDatabaseAdapter($db['host'], $db['database'], $db['user'], $db['password']);
+		if ($this->isDevelopment()) {
+			$dba = new DbaDebugDecorator($dba);
+		}
+		return $dba;
 	}
 
 	protected function getConfig() {

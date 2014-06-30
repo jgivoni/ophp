@@ -2,6 +2,8 @@
 
 namespace Ophp;
 
+use Ophp\SqlCriteriaBuilder as CB;
+
 /**
  * Standardized mapping between data storage and model
  * 
@@ -16,6 +18,11 @@ abstract class DataMapper {
 	 * @var MySqlDatabaseAdapter
 	 */
 	protected $dba;
+	/**
+	 *
+	 * @var SqlCriteriaAssembler
+	 */
+	protected $queryAssembler;
 	protected $sharedModels = array();
 	protected $fields = array();
 	protected $tableName = '';
@@ -59,28 +66,29 @@ abstract class DataMapper {
 		return $this;
 	}
 
-	public function onLoad(SqlQueryBuilder_Select $query = null) {
-		if (!isset($query)) {
-			$query = $this->dba->select();
+	public function newQuery()
+	{
+		$query = new SqlQueryBuilder_Select;
+		if (!isset($this->queryAssembler)) {
+			$this->queryAssembler = new SqlCriteriaAssembler;
+		}
+		$query->setQueryAssembler($this->queryAssembler);
+		foreach ($this->fields as $name => $config) {
+			$query->select(CB::field(isset($config['column']) ? $config['column'] : $name));
 		}
 		$query->from("`{$this->tableName}`");
 
-		foreach ($this->fields as $name => $config) {
-			$query->select(isset($config['column']) ? $config['column'] : $name);
-		}
 		return $query;
 	}
 	
 	public function loadOne(SqlQueryBuilder_Select $query = null) {
-		$query = $this->onLoad($query);
-		$recordSet = $query->run();
-
-		if ($recordSet->isEmpty()) {
+		$query->limit(1);
+		$models = $this->loadAll($query);
+		if (count($models) === 0) {
 			throw new \OutOfBoundsException('Row not found');
 		}
 
-		$model = $this->mapRowToModel($recordSet->first());
-		$this->setSharedModel($model);
+		$model = current($models);
 		return $model;
 	}
 
@@ -91,8 +99,8 @@ abstract class DataMapper {
 	 * @throws Exception
 	 */
 	public function loadByPrimaryKey($pk) {
-		$query = $this->dba->select()
-				->where('`' . $this->getPkColumn() . '` = ' . (int) $pk);
+		$query = $this->newQuery()
+				->where(CB::is($this->getPkColumn(), (int) $pk));
 		return $this->loadOne($query);
 	}
 
@@ -101,12 +109,15 @@ abstract class DataMapper {
 	 * @return array Of Model
 	 */
 	public function loadAll(SqlQueryBuilder_Select $query = null) {
-		$query = $this->onLoad($query);
 
 		$query->countMatchedRows();
+		$recordSet = $this->dba->query($query);
 
-		$recordSet = $query->run();
-
+		// Not used here, but for reference
+		$result2 = $this->dba->query('SELECT FOUND_ROWS()');
+		$matchedRows = (int) $result2->first()[0];
+		$recordSet->setMatchedRows($matchedRows);
+	
 		$models = array();
 		foreach ($recordSet as $record) {
 			$model = $this->mapRowToModel($record);
@@ -122,9 +133,8 @@ abstract class DataMapper {
 	 * @param \Ophp\Model $model
 	 */
 	public function deleteByModel(Model $model) {
-		$sql = $this->dba->delete()
-				->where("`{$this->fields[$this->primaryKey]}` = " . $model->{$this->primaryKey});
-		$result = $this->deleteByQuery($sql);
+		$criteria = CB::is($this->getPkColumn(), $model->{$this->primaryKey});
+		$result = $this->deleteByCriteria($criteria);
 		if ($result->getNumRows() !== 1) {
 			throw new Exception('Row not found');
 		}
@@ -136,9 +146,11 @@ abstract class DataMapper {
 	 * @param SqlQueryBuilder_Delete $sql
 	 * @return DbQueryResult
 	 */
-	public function deleteByQuery(SqlQueryBuilder_Delete $sql) {
-		return $sql->from("`{$this->tableName}`")
-						->run();
+	public function deleteByCriteria(SqlCriteriaNode $criteria) {
+		$sql = $this->dba->delete()
+				->from("`{$this->tableName}`")
+				->where($criteria);
+		return $sql->run();
 	}
 
 	/**
