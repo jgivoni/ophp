@@ -18,6 +18,7 @@ abstract class DataMapper {
 	 * @var MySqlDatabaseAdapter
 	 */
 	protected $dba;
+
 	/**
 	 *
 	 * @var SqlCriteriaAssembler
@@ -45,7 +46,7 @@ abstract class DataMapper {
 	abstract public function newModel();
 
 	/**
-	 * Returns a reusable model of the data corresponding to the primary key
+	 * Returns a reusable model of the data record corresponding to the primary key
 	 * 
 	 * @param mixed $primaryKey
 	 * @return \Model
@@ -65,14 +66,33 @@ abstract class DataMapper {
 		$this->sharedModels[$model[$this->primaryKey]] = $model;
 		return $this;
 	}
-
-	public function newQuery()
+	
+	/**
+	 * Returns the query assembler
+	 * 
+	 * NB: The query assembler is only a criteria assembler for now
+	 * 
+	 * The first time this method is run, the criteria assembler will be instantiated
+	 * 
+	 * @return SqlCriteriaAssembler
+	 */
+	protected function getQueryAssembler()
 	{
-		$query = new SqlQueryBuilder_Select;
 		if (!isset($this->queryAssembler)) {
-			$this->queryAssembler = new SqlCriteriaAssembler;
+			$this->queryAssembler = (new SqlCriteriaAssembler)->setEscapeStringFunction(function($str){
+				return $this->dba->escapeString($str);
+			});
 		}
-		$query->setQueryAssembler($this->queryAssembler);
+		return $this->queryAssembler;
+	}
+
+	/**
+	 * Returns a new select query prepared to select from the correct table(s)
+	 * @return \Ophp\SqlQueryBuilder_Select
+	 */
+	public function newSelectQuery() {
+		$query = new SqlQueryBuilder_Select;
+		$query->setQueryAssembler($this->getQueryAssembler());
 		foreach ($this->fields as $name => $config) {
 			$query->select(CB::field(isset($config['column']) ? $config['column'] : $name));
 		}
@@ -80,9 +100,46 @@ abstract class DataMapper {
 
 		return $query;
 	}
+
+	/**
+	 * Returns a new update query, prepared to update the correct table
+	 * @return \Ophp\SqlQueryBuilder_Update
+	 */
+	public function newUpdateQuery() {
+		$query = new SqlQueryBuilder_Update;
+		$query->setQueryAssembler($this->getQueryAssembler());
+		$query->update("`{$this->tableName}`");
+
+		return $query;
+	}
 	
+	/**
+	 * Returns a new insert query, prepared to insert a row into the correct table
+	 * @return \Ophp\SqlQueryBuilder_Insert
+	 */
+	public function newInsertQuery() {
+		$query = new SqlQueryBuilder_Insert;
+		$query->setQueryAssembler($this->getQueryAssembler());
+		$query->into("`{$this->tableName}`");
+
+		return $query;
+	}
+
+	/**
+	 * Returns a new delete query, prepared to delete from the correct table
+	 * @return \Ophp\SqlQueryBuilder_Delete
+	 */
+	public function newDeleteQuery() {
+		$query = new SqlQueryBuilder_Delete;
+		$query->setQueryAssembler($this->getQueryAssembler());
+		$query->from("`{$this->tableName}`");
+
+		return $query;
+	}
+
 	public function loadOne(SqlQueryBuilder_Select $query = null) {
-		$query->limit(1);
+		$query->limit(1)
+			->countMatchedRows(false);
 		$models = $this->loadAll($query);
 		if (count($models) === 0) {
 			throw new \OutOfBoundsException('Row not found');
@@ -99,7 +156,7 @@ abstract class DataMapper {
 	 * @throws Exception
 	 */
 	public function loadByPrimaryKey($pk) {
-		$query = $this->newQuery()
+		$query = $this->newSelectQuery()
 				->where(CB::is($this->getPkColumn(), (int) $pk));
 		return $this->loadOne($query);
 	}
@@ -117,7 +174,7 @@ abstract class DataMapper {
 		$result2 = $this->dba->query('SELECT FOUND_ROWS()');
 		$matchedRows = (int) $result2->first()[0];
 		$recordSet->setMatchedRows($matchedRows);
-	
+
 		$models = array();
 		foreach ($recordSet as $record) {
 			$model = $this->mapRowToModel($record);
@@ -147,10 +204,9 @@ abstract class DataMapper {
 	 * @return DbQueryResult
 	 */
 	public function deleteByCriteria(SqlCriteriaNode $criteria) {
-		$sql = $this->dba->delete()
-				->from("`{$this->tableName}`")
+		$query = $this->newDeleteQuery()
 				->where($criteria);
-		return $sql->run();
+		return $this->dba->query($query);
 	}
 
 	/**
@@ -173,9 +229,14 @@ abstract class DataMapper {
 		return $model;
 	}
 
+	/**
+	 * Returns the column name of the primary key
+	 * @return type
+	 */
 	protected function getPkColumn() {
 		return isset($this->fields[$this->primaryKey]['column']) ?
 				$this->fields[$this->primaryKey]['column'] :
 				$this->primaryKey;
 	}
+
 }
