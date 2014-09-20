@@ -33,6 +33,7 @@ class HttpResponse {
 		} else {
 			$this->headers[] = $value;
 		}
+		return $this;
 	}
 	
 	public function status($status) {

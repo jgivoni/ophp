@@ -80,6 +80,6 @@ class UrlRouter extends Router {
 				}
 			}
 		}
-		throw new \Exception('No route found for url: '.$req->url);
+		throw new NotFoundException('No route found for url: '.$req->url);
 	}
 }

@@ -6,7 +6,7 @@ namespace Ophp;
  *  Not sure this should be used - check out TaskFilter instead
  * 
  */
-class Form {
+abstract class Form {
 
 	const METHOD_GET = 1;
 	const METHOD_POST = 2;
@@ -16,10 +16,6 @@ class Form {
 	protected $exceptions = array();
 	
 	protected $fields = array();
-
-	public function __construct() {
-		
-	}
 
 	public function newField($name = null) {
 		return new FormField($name);

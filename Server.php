@@ -59,6 +59,8 @@ class Server {
 		
 		$this->baseUrl = $config->baseUrl;
 		$this->setRunMode($config->runMode);
+		
+		set_error_handler(array($this,'errorHandler'));  
 	}
 
 	public function setAppRootPath($appRootPath) {
@@ -99,6 +101,12 @@ class Server {
 			$response = $this->getResponse($req);
 			$this->sendResponse($response);
 			//$this->shutDown();
+		} catch (NotFoundException $e) {
+			$response = (new HttpResponse())
+				->status(HttpResponse::STATUS_NOT_FOUND)
+				->header('Content-Type', 'text/plain')
+				->body('404 Page Not Found');
+			$this->sendResponse($response);
 		} catch (\Exception $e) {
 			$response = new HttpResponse();
 			$response->status(HttpResponse::STATUS_INTERNAL_SERVER_ERROR);
@@ -226,4 +234,17 @@ class Server {
 		}
 	}
 
+    public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
+    {
+        // Don't throw exception if error reporting is switched off
+        if (error_reporting() == 0) {
+            return;
+        }
+        // Only throw exceptions for errors we are asking for
+        if (error_reporting() & $errno) {
+
+            $exception = new Exception($errstr);//, 0, $errno, $errfile, $errline);
+			throw $exception;
+        }
+	}
 }

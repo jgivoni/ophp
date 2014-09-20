@@ -90,7 +90,7 @@ abstract class DataMapper {
 	 * Returns a new select query prepared to select from the correct table(s)
 	 * @return \Ophp\SqlQueryBuilder_Select
 	 */
-	public function newSelectQuery() {
+	protected function newSelectQuery() {
 		$query = new SqlQueryBuilder_Select;
 		$query->setQueryAssembler($this->getQueryAssembler());
 		foreach ($this->fields as $name => $config) {
@@ -105,7 +105,7 @@ abstract class DataMapper {
 	 * Returns a new update query, prepared to update the correct table
 	 * @return \Ophp\SqlQueryBuilder_Update
 	 */
-	public function newUpdateQuery() {
+	protected function newUpdateQuery() {
 		$query = new SqlQueryBuilder_Update;
 		$query->setQueryAssembler($this->getQueryAssembler());
 		$query->update("`{$this->tableName}`");
@@ -117,7 +117,7 @@ abstract class DataMapper {
 	 * Returns a new insert query, prepared to insert a row into the correct table
 	 * @return \Ophp\SqlQueryBuilder_Insert
 	 */
-	public function newInsertQuery() {
+	protected function newInsertQuery() {
 		$query = new SqlQueryBuilder_Insert;
 		$query->setQueryAssembler($this->getQueryAssembler());
 		$query->into("`{$this->tableName}`");
@@ -129,7 +129,7 @@ abstract class DataMapper {
 	 * Returns a new delete query, prepared to delete from the correct table
 	 * @return \Ophp\SqlQueryBuilder_Delete
 	 */
-	public function newDeleteQuery() {
+	protected function newDeleteQuery() {
 		$query = new SqlQueryBuilder_Delete;
 		$query->setQueryAssembler($this->getQueryAssembler());
 		$query->from("`{$this->tableName}`");
@@ -137,9 +137,14 @@ abstract class DataMapper {
 		return $query;
 	}
 
+	/**
+	 * Returns a model for the first row matched
+	 * @param \Ophp\SqlQueryBuilder_Select $query
+	 * @return Model
+	 * @throws \OutOfBoundsException
+	 */
 	public function loadOne(SqlQueryBuilder_Select $query = null) {
-		$query->limit(1)
-			->countMatchedRows(false);
+		$query->limit(1);
 		$models = $this->loadAll($query);
 		if (count($models) === 0) {
 			throw new \OutOfBoundsException('Row not found');
@@ -156,7 +161,7 @@ abstract class DataMapper {
 	 * @throws Exception
 	 */
 	public function loadByPrimaryKey($pk) {
-		$query = $this->newSelectQuery()
+		$query = $this->newSelectQuery()->comment(__METHOD__)
 				->where(CB::is($this->getPkColumn(), (int) $pk));
 		return $this->loadOne($query);
 	}
@@ -167,13 +172,13 @@ abstract class DataMapper {
 	 */
 	public function loadAll(SqlQueryBuilder_Select $query = null) {
 
-		$query->countMatchedRows();
+//		$query->countMatchedRows();
 		$recordSet = $this->dba->query($query);
 
 		// Not used here, but for reference
-		$result2 = $this->dba->query('SELECT FOUND_ROWS()');
-		$matchedRows = (int) $result2->first()[0];
-		$recordSet->setMatchedRows($matchedRows);
+//		$result2 = $this->dba->query('SELECT FOUND_ROWS()');
+//		$matchedRows = (int) $result2->first()[0];
+//		$recordSet->setMatchedRows($matchedRows);
 
 		$models = array();
 		foreach ($recordSet as $record) {

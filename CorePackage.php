@@ -25,6 +25,7 @@ class CorePackage {
 				__NAMESPACE__.'\HtmlResponse' => 'HtmlResponse.php',
 				__NAMESPACE__.'\JsonResponse' => 'JsonResponse.php',
 				__NAMESPACE__.'\VesselException' => 'VesselException.php',
+				__NAMESPACE__.'\NotFoundException' => 'exceptions/NotFoundException.php',
 				__NAMESPACE__.'\ControllerInterface' => 'ControllerInterface.php',
 				__NAMESPACE__.'\Controller' => 'Controller.php',
 				__NAMESPACE__.'\Model' => 'Model.php',

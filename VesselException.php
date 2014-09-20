@@ -32,5 +32,3 @@ Exception: Couldn't open connection to database (class.DatabaseInterface.php, li
 	- pwd: "<undisclosed>"
 	- mysql_error: "Access denied for user 'root'@'localhost' (using password: YES)"
 */
-
-?>
