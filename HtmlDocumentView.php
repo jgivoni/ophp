@@ -10,7 +10,7 @@ namespace Ophp;
  * 
  */
 class HtmlDocumentView extends View {
-	
+
 	/**
 	 * View for a css <link> element
 	 * @var View
@@ -29,8 +29,8 @@ class HtmlDocumentView extends View {
 	
 	/**
 	 * Creates a new html document view
-	 * @param string $template Full template file path + name
-	 * @param \Closure $newViewFunction
+	 * @param string $template Template file, relative to base
+	 * @param string $templateBase Base path for all template files
 	 */
 	public function __construct($template, $templateBase) {
 		parent::__construct($template, $templateBase);

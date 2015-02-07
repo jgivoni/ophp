@@ -5,7 +5,6 @@ namespace Ophp;
 class CorePackage {
 	public function __construct() {
 		$this->bootstrap();
-		new FilterPackage;
 	}
 	
 	protected function bootstrap() {
@@ -40,6 +39,8 @@ class CorePackage {
 				__NAMESPACE__.'\Form' => 'forms/Form.php',
 				__NAMESPACE__.'\FormField' => 'forms/FormField.php',
 				__NAMESPACE__.'\FormFieldOption' => 'forms/FormFieldOption.php',
+				__NAMESPACE__.'\DbaPackage' => 'dba/DbaPackage.php',
+				
 			);
 			if (isset($paths[$class])) {
 				require_once __DIR__.'/'.$paths[$class];
