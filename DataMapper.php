@@ -94,7 +94,7 @@ abstract class DataMapper {
 		$query = new SqlQueryBuilder_Select;
 		$query->setQueryAssembler($this->getQueryAssembler());
 		foreach ($this->fields as $name => $config) {
-			$query->select(CB::field(isset($config['column']) ? $config['column'] : $name));
+			$query->select(CB::field(isset($config['column']) ? $config['column'] : $name, $this->tableName));
 		}
 		$query->from("`{$this->tableName}`");
 
@@ -143,7 +143,7 @@ abstract class DataMapper {
 	 * @return Model
 	 * @throws \OutOfBoundsException
 	 */
-	public function loadOne(SqlQueryBuilder_Select $query = null) {
+	public function loadOne(SqlQueryBuilder_Select $query) {
 		$query->limit(1);
 		$models = $this->loadAll($query);
 		if (count($models) === 0) {
@@ -155,6 +155,17 @@ abstract class DataMapper {
 	}
 
 	/**
+	 * Returns the count of rows matched by the select query
+	 * @param \Ophp\SqlQueryBuilder_Select $query
+	 * @return int
+	 */
+	public function count(SqlQueryBuilder_Select $query) {
+		$query->select('count(*)');
+		return $this->dba->query($query)
+			->first()['count(*)'];
+	}
+
+	/**
 	 * 
 	 * @param mixed $pk
 	 * @return Model
@@ -162,7 +173,7 @@ abstract class DataMapper {
 	 */
 	public function loadByPrimaryKey($pk) {
 		$query = $this->newSelectQuery()->comment(__METHOD__)
-				->where(CB::is($this->getPkColumn(), (int) $pk));
+				->where(CB::is(CB::field($this->getPkColumn(), $this->tableName), (int) $pk));
 		return $this->loadOne($query);
 	}
 
@@ -236,7 +247,7 @@ abstract class DataMapper {
 
 	/**
 	 * Returns the column name of the primary key
-	 * @return type
+	 * @return string
 	 */
 	protected function getPkColumn() {
 		return isset($this->fields[$this->primaryKey]['column']) ?

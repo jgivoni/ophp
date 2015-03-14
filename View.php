@@ -12,6 +12,11 @@ class View {
 	protected $templateBase;
 	protected $parent;
 	
+	/**
+	 * 
+	 * @param string $template Template file, relative to base
+	 * @param string $templateBase Base path for all template files
+	 */
 	public function __construct($template, $templateBase = null) {
 		$this->template = $template;
 		if (isset($templateBase)) {

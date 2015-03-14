@@ -39,7 +39,7 @@ class Server {
 	protected $request;
 
 	/**
-	 * @var array
+	 * @var Config
 	 */
 	protected $config;
 
@@ -53,8 +53,7 @@ class Server {
 	/**
 	 * Constructs the server - nothing needed to initialize it, as it is a stand-alone thing
 	 */
-	public function __construct($appRootPath) {
-		$this->setAppRootPath($appRootPath);
+	public function __construct() {
 		$config = $this->getConfig();
 		
 		$this->baseUrl = $config->baseUrl;
@@ -88,9 +87,6 @@ class Server {
 	 */
 	public function handleRequest(HttpRequest $req = null) {
 		try {
-			if ($this->isDevelopment()) {
-				new FirePhpPackage;
-			}
 			if (empty($req)) {
 				$req = $this->newRequest();
 				$req->setServerVars($_SERVER); // @todo Break this up into its parts
@@ -163,7 +159,7 @@ class Server {
 	/**
 	 * Returns a new router object
 	 * In this server, we use url-routers, which select routes only based on the url
-	 * 
+	 * Override this in app server
 	 * @return Router
 	 */
 	public function newRouter() {
@@ -189,18 +185,25 @@ class Server {
 		return $dba;
 	}
 
+	/**
+	 * Returns the app configuration
+	 * @return Config
+	 */
 	protected function getConfig() {
-		return isset($this->config) ? $this->config : $this->loadConfig();
+		if (!isset($this->config)) {
+			$this->config = $this->newConfig();
+		}
+		return $this->config;
 	}
 
 	/**
-	 * @todo Reqwrite this - too much presumption
-	 * Perhaps config could be a config object instead?
-	 * @return type
+	 * Returns a new config object
+	 * Override this in app server
+	 * @return \Ophp\Config
 	 */
-	protected function loadConfig() {
-		$this->config = new \EnvironmentConfig;
-		return $this->config;
+	protected function newConfig()
+	{
+		return new Config;
 	}
 
 	public function getRequest() {
@@ -222,16 +225,14 @@ class Server {
 	}
 
 	public function getUrlHelper() {
-		if (isset($this->urlHelper)) {
-			return $this->urlHelper;
-		} else {
+		if (!isset($this->urlHelper)) {
 			$this->urlHelper = new UrlHelper($this->baseUrl);
 			$config = $this->getConfig();
 			foreach ($config->paths as $key => $path) {
 				$this->urlHelper->$key = $path;
 			}
-			return $this->urlHelper;
 		}
+		return $this->urlHelper;
 	}
 
     public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext)

@@ -1,6 +1,13 @@
 <?php
 
-class EnvironmentConfig extends AppNamespace\DevelopmentConfig
+/**
+ * Example environment config file
+ * 
+ */
+
+namespace MyApp;
+
+class EnvironmentConfig extends DevelopmentConfig
 {
     /**
      * Root url string

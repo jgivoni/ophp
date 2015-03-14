@@ -5,7 +5,6 @@ namespace Ophp;
 class Config {
 	 public function __construct()
 	 {
-		 ;
 	 }
 	 
 	 public function __get($name)

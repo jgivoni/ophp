@@ -57,13 +57,35 @@ class FormField {
 		return $this->type;
 	}
 
+	/**
+	 * 
+	 * @param array $options
+	 * @return \Ophp\FormField
+	 */
 	public function setOptions($options) {
 		$this->options = $options;
 		return $this;
 	}
 
+	/**
+	 * 
+	 * @return array
+	 */
 	public function getOptions() {
 		return $this->options;
+	}
+
+	/**
+	 * 
+	 * @param mixed $value
+	 * @return FormFieldOption
+	 */
+	public function getOption($value) {
+		foreach ($this->options as $option) {
+			if ($option->value == $value) {
+				return $option;
+			}
+		}
 	}
 
 	public function addExceptions($exceptions) {

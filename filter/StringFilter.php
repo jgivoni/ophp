@@ -26,7 +26,7 @@ class StringFilter extends Filter {
 			$value = (string) $value;
 			if ($type === 'int' && intval($value) !== $origValue) {
 				throw new FilterException('Not a string');
-			} elseif ($type === 'bool' && (bool) value !== $origValue) {
+			} elseif ($type === 'bool' && boolval ($value) !== $origValue) {
 				throw new FilterException('Not a string');
 			} elseif ($type === 'float' && floatval($value) !== $origValue) {
 				throw new FilterException('Not a string');

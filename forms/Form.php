@@ -26,6 +26,11 @@ abstract class Form {
 		return $this;
 	}
 
+	/**
+	 * 
+	 * @param string $name
+	 * @return FormField
+	 */
 	public function getField($name) {
 		return $this->hasField($name) ? $this->fields[$name] : null;
 	}
