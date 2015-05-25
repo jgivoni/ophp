@@ -53,11 +53,9 @@ class Queue
     
     public function execute()
     {
-        echo "Starting...\n";
         $process = $this->getNextProcess();
         while (isset($process)) {
-            echo "Next process...\n";
-            if ($process->execute()) {
+            if ($process()) {
                 $this->removeProcess($this->currentProcess);
             }
             $process = $this->getNextProcess();
