@@ -90,7 +90,7 @@ class Server {
 			if (empty($req)) {
 				$req = $this->newRequest();
 				$req->setServerVars($_SERVER); // @todo Break this up into its parts
-				$req->setHeaders(apache_request_headers()); // Requires PHP 5.4 if not running as apache module
+//				$req->setHeaders(apache_request_headers()); // Requires PHP 5.4 if not running as apache module
 				$req->autoDetect();
 			}
 			$req->setServer($this);
@@ -182,6 +182,13 @@ class Server {
 		if ($this->isDevelopment()) {
 			$dba = new DbaDebugDecorator($dba);
 		}
+		return $dba;
+	}
+	
+	public function newDynamoDbDatabaseAdapter($key) {
+		$config = $this->getConfig();
+		$db = $config->databaseConnections[$key];
+		$dba = new DynamoDbDatabaseAdapter($db['region'], $db['table']);
 		return $dba;
 	}
 
