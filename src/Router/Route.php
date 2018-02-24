@@ -1,6 +1,6 @@
 <?php
 
-namespace Ophp;
+namespace Ophp\Router;
 
 /**
  * A route parses a url and determines if its controller will handle it

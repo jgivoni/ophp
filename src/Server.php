@@ -76,7 +76,7 @@ class Server {
 	 * @return LampRequest
 	 */
 	public function newRequest() {
-		return new LampRequest(); // < HttpRequest
+		return new requests\LampRequest(); // < HttpRequest
 	}
 
 	/**
@@ -85,7 +85,7 @@ class Server {
 	 * 
 	 * @param HttpRequest $req Request object
 	 */
-	public function handleRequest(HttpRequest $req = null) {
+	public function handleRequest(requests\HttpRequest $req = null) {
 		try {
 			if (empty($req)) {
 				$req = $this->newRequest();
@@ -139,7 +139,7 @@ class Server {
 	 * @param object $req Request object
 	 * @return object Response object
 	 */
-	public function getResponse(HttpRequest $req) {
+	public function getResponse(requests\HttpRequest $req) {
 		$this->request = $req;
 		$controller = $this->getRouter()->getController($req);
 		$controller->setServer($this);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Ophp;
+namespace Ophp\Router;
 
 /**
  * Regex based routing
