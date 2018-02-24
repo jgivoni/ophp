@@ -5,7 +5,7 @@ namespace Ophp\requests;
 /**
  * Encapsulates a generic http request
  */
-class HttpRequest {
+class HttpRequest extends Request {
 
 	public $url;
 	public $params = array();

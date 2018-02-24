@@ -7,26 +7,13 @@ namespace Ophp;
  * This is done via the internal router, which is used to find a controller that will process the request and
  * construct the response.
  * The server is, however, controller-agnostic.
- * The server is also the only entity that knows things specific to the webserver and its environment it's running on
+ * The server is also the only entity that knows things specific to the webserver and the environment it's running in
  */
-class Server {
+abstract class Server {
 
 	const RUNMODE_DEVELOPMENT = 'development';
 	const RUNMODE_STAGING = 'staging';
 	const RUNMODE_PRODUCTION = 'production';
-
-	/**
-	 * The app root base path
-	 * This is used at the moment to specify the path to the view scripts,
-	 */
-	protected $appRootPath;
-	
-	/**
-	 * Base url of application with trailing slash if it's a directory
-	 * 
-	 * @var string
-	 */
-	protected $baseUrl;
 
 	/**
 	 * The router object that manages a list of routes
@@ -44,39 +31,29 @@ class Server {
 	protected $config;
 
 	/**
-	 *
+	 * 
 	 * @var string Key defining the type of environment (development, production, staging etc.)
 	 */
-	protected $runMode = self::RUNMODE_DEVELOPMENT;
-	protected $urlHelper;
-
+	protected $runMode = self::RUNMODE_DEVELOPMENT; // Default run mode
+    
 	/**
 	 * Constructs the server - nothing needed to initialize it, as it is a stand-alone thing
 	 */
 	public function __construct() {
 		$config = $this->getConfig();
 		
-		$this->baseUrl = $config->baseUrl;
 		$this->setRunMode($config->runMode);
 		
 		set_error_handler(array($this,'errorHandler'));  
 	}
 
-	public function setAppRootPath($appRootPath) {
-		$this->appRootPath = $appRootPath;
-	}
-
-	public function getAppRootPath() {
-		return $this->appRootPath;
-	}
-	
 	/**
 	 * Request factory
 	 * The server knows what kind of request is appropriate here
 	 * @return LampRequest
 	 */
 	public function newRequest() {
-		return new requests\LampRequest(); // < HttpRequest
+		return new requests\Request();
 	}
 
 	/**
@@ -97,20 +74,13 @@ class Server {
 			$response = $this->getResponse($req);
 			$this->sendResponse($response);
 			//$this->shutDown();
-		} catch (NotFoundException $e) {
-			$response = (new HttpResponse())
-				->status(HttpResponse::STATUS_NOT_FOUND)
-				->header('Content-Type', 'text/plain')
-				->body('404 Page Not Found');
-			$this->sendResponse($response);
 		} catch (\Exception $e) {
-			$response = new HttpResponse();
-			$response->status(HttpResponse::STATUS_INTERNAL_SERVER_ERROR);
-			$response->header('Content-Type', 'text/plain');
+			$response = new Response();
+			$response->status(Response::STATUS_ERROR);
 			if ($this->isDevelopment()) {
 				$response->body($e->getMessage() . "\n" . $e->getTraceAsString());
 			} else {
-				$response->body('This is not working...');
+				$response->body('Error');
 			}
 			$this->sendResponse($response);
 		}
@@ -121,15 +91,7 @@ class Server {
 	 * 
 	 * @param HttpResponse $res
 	 */
-	public function sendResponse(HttpResponse $res) {
-		foreach ($res->headers as $key => $value) {
-			if (!is_numeric($key)) {
-				$header = "$key: $value";
-			} else {
-				$header = $value;
-			}
-			header($header);
-		}
+	public function sendResponse(Response $res) {
 		echo (string) $res;
 	}
 
@@ -162,34 +124,15 @@ class Server {
 	 * Override this in app server
 	 * @return Router
 	 */
-	public function newRouter() {
-		return new UrlRouter();
-	}
+	abstract public function newRouter();
 
 	public function addRoute(Route $route) {
 		$this->getRouter()->addRoute($route);
 		return $this;
 	}
 
-	public function newException($message, $previous) {
+	public function newException($message, $previous = null) {
 		return new Exception($message, 0, $previous);
-	}
-
-	public function newMysqlDatabaseAdapter($key) {
-		$config = $this->getConfig();
-		$db = $config->databaseConnections[$key];
-		$dba = new MysqlDatabaseAdapter($db['host'], $db['database'], $db['user'], $db['password']);
-		if ($this->isDevelopment()) {
-			$dba = new DbaDebugDecorator($dba);
-		}
-		return $dba;
-	}
-	
-	public function newDynamoDbDatabaseAdapter($key) {
-		$config = $this->getConfig();
-		$db = $config->databaseConnections[$key];
-		$dba = new DynamoDbDatabaseAdapter($db['region'], $db['table']);
-		return $dba;
 	}
 
 	/**
@@ -231,17 +174,6 @@ class Server {
 		return $this->getRunMode() === self::RUNMODE_DEVELOPMENT;
 	}
 
-	public function getUrlHelper() {
-		if (!isset($this->urlHelper)) {
-			$this->urlHelper = new UrlHelper($this->baseUrl);
-			$config = $this->getConfig();
-			foreach ($config->paths as $key => $path) {
-				$this->urlHelper->$key = $path;
-			}
-		}
-		return $this->urlHelper;
-	}
-
     public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
     {
         // Don't throw exception if error reporting is switched off
@@ -250,9 +182,7 @@ class Server {
         }
         // Only throw exceptions for errors we are asking for
         if (error_reporting() & $errno) {
-
-            $exception = new Exception($errstr);//, 0, $errno, $errfile, $errline);
-			throw $exception;
+            throw $this->newException($errstr, $errno);
         }
 	}
 }
