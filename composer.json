@@ -1,11 +1,12 @@
 {
+    "name": "jgivoni/ophp",
     "require": {
 
     },
 
     "autoload": {
         "psr-4": {
-            "Ophp\\": "./"
+            "Ophp\\": "src/"
         }
     }
 }
