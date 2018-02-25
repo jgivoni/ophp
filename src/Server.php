@@ -35,16 +35,17 @@ abstract class Server {
 	 * @var string Key defining the type of environment (development, production, staging etc.)
 	 */
 	protected $runMode = self::RUNMODE_DEVELOPMENT; // Default run mode
-    
+
 	/**
 	 * Constructs the server - nothing needed to initialize it, as it is a stand-alone thing
 	 */
+
 	public function __construct() {
 		$config = $this->getConfig();
-		
+
 		$this->setRunMode($config->runMode);
-		
-		set_error_handler(array($this,'errorHandler'));  
+
+		set_error_handler(array($this, 'errorHandler'));
 	}
 
 	/**
@@ -78,7 +79,14 @@ abstract class Server {
 			$response = new Response();
 			$response->status(Response::STATUS_ERROR);
 			if ($this->isDevelopment()) {
-				$response->body($e->getMessage() . "\n" . $e->getTraceAsString());
+				$body = [];
+				$body[] = 'Uncaught exception:';
+				$body[] = $e->getMessage();
+				$body[] = $e->getTraceAsString();
+				if ($e->getPrevious()) {
+					$body[] = $e->getPrevious()->getMessage();
+				}
+				$response->body(implode("\n", $body));
 			} else {
 				$response->body('Error');
 			}
@@ -151,8 +159,7 @@ abstract class Server {
 	 * Override this in app server
 	 * @return \Ophp\Config
 	 */
-	protected function newConfig()
-	{
+	protected function newConfig() {
 		return new Config;
 	}
 
@@ -174,15 +181,15 @@ abstract class Server {
 		return $this->getRunMode() === self::RUNMODE_DEVELOPMENT;
 	}
 
-    public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
-    {
-        // Don't throw exception if error reporting is switched off
-        if (error_reporting() == 0) {
-            return;
-        }
-        // Only throw exceptions for errors we are asking for
-        if (error_reporting() & $errno) {
-            throw $this->newException($errstr, $errno);
-        }
+	public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext) {
+		// Don't throw exception if error reporting is switched off
+		if (error_reporting() == 0) {
+			return;
+		}
+		// Only throw exceptions for errors we are asking for
+		if (error_reporting() & $errno) {
+			throw $this->newException($errstr, $errno);
+		}
 	}
+
 }

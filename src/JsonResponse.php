@@ -23,6 +23,12 @@ class JsonResponse extends HttpResponse {
 				$arr[$key] = $this->encodeData($value);
 			}
 			return $arr;
+		} elseif (is_object($data) && $data instanceof \ArrayAccess) {
+            $arr = array();
+			foreach ($data as $key => $value) {
+				$arr[$key] = $this->encodeData($value);
+			}
+			return $arr;
 		} elseif (is_object($data) && method_exists($data, '__toString')) {
 			return (string) $data;
 		} else {

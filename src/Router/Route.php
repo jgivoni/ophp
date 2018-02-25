@@ -3,65 +3,56 @@
 namespace Ophp\Router;
 
 /**
- * A route parses a url and determines if its controller will handle it
+ * A route parses a request and determines if its controller will handle it
  * The route might also add parameters to the request determined by the url, if matched
  * 
  */
 class Route {
 	
 	/**
-	 *
-	 * @var Closure Function returns mixed if route is matches, false if not
+	 * Function returns mixed if route is matches, false if not
+	 * 
+	 * @var Callable
 	 */
 	protected $routeMatcher;
 	/**
 	 *
-	 * @var Closure Function returns a controller object
+	 * @var Callable
 	 */
-	protected $controllerCreator;
-	/**
-	 * @var Closure Function returns a url path
-	 */
-	protected $reverseRoute;
+	protected $controllerFactory;
 
-	public function __construct(Closure $routeMatcher, Closure $controllerCreator, Closure $reverseRoute = null) {
-		$this->routeMatcher = $routeMatcher;
-		$this->controllerCreator = $controllerCreator;
-		$this->reverseRoute = $reverseRoute;
-	}
-	
 	/**
-	 * Checks if a url matches the route
+	 * Creates a new route with the given route matcher and controller factory functions
 	 * 
-	 * @param string $url
-	 * @return mixed True, false or any value to pass on to the $controllerCreator
+	 * @param Closure $routeMatcher Function that returns constraint if route is matches, false if not
+	 * @param Closure $controllerFactory Function that returns a controller object
 	 */
-	public function matches($url) {
+	public function __construct(\Closure $routeMatcher, \Closure $controllerFactory) {
+		$this->routeMatcher = $routeMatcher;
+		$this->controllerFactory = $controllerFactory;
+	}
+	
+	/**
+	 * Checks if the input matches the route
+	 * 
+	 * @param mixed $input
+	 * @return mixed Constraint to pass on to the controller factory
+	 */
+	public function matches($input) {
 		$routerMatcher = $this->routeMatcher;
-		return $routerMatcher($url);
+		return $routerMatcher($input);
 	}
 	
-	public function getController($value = null) {
-		$controllerCreator = $this->controllerCreator;
-		return $controllerCreator($value);
+	/**
+	 * Returns a controller based on the given constraint (optional)
+	 * 
+	 * @param mixed $constraint
+	 * @return Controller
+	 */
+	public function getController($constraint = null) {
+		$controllerFactory = $this->controllerFactory;
+		return $controllerFactory($constraint);
 	}
 	
-	public function getUrlPath($params) {
-		$reverseRoute = $this->reverseRoute;
-		return $reverseRoute($params);
-	}
 }
-
-/* generalize this:
-new Route(function($url){
-	if (preg_match('#\.t(\d+)$#', parse_url($url, PHP_URL_PATH), $matches)) {
-		return $matches;
-	} else {
-		return false;
-	}
-}, function($matches){
-	return new ViewTaskController($matches[1]);
-}, function($params) {
-	return '/.t'.$params['task_id'];
-	*/
 	

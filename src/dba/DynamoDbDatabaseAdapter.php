@@ -1,109 +1,219 @@
 <?php
 
-namespace Ophp;
+namespace Ophp\dba;
 
-class DynamoDbDatabaseAdapter {
+class DynamoDbDatabaseAdapter
+{
+    /**
+     *
+     * @var \Aws\DynamoDb\DynamoDbClient
+     */
+    protected $client, $marshaler;
+    protected $params;
 
-	/**
-	 *
-	 * @var \Aws\DynamoDb\DynamoDbClient
-	 */
-	protected $client;
-	protected $region, $table;
+    public function __construct($params)
+    {
+        $this->params = $params;
+    }
 
-	public function __construct($region, $table) {
-		$this->region = $region;
-		$this->table = $table;
-	}
+    protected function getCredentials()
+    {
+        if (!isset($this->credentials)) {
+            $credentialsFile = $this->params['credentialsFile'];
 
-	/**
-	 * @param string $sql
-	 * @returns DbQueryResult
-	 */
-	public function query($sql) {
-		$this->connect();
+            // Don't specify a credentials file if you want to autodetect or use an EC2 embedded role
+            if (!empty($credentialsFile)) {
+                if (!file_exists($credentialsFile)) {
+                    throw new \Exception('AWS credentials file not found');
+                }
+                $credentialsProvider = \Aws\Credentials\CredentialProvider::ini('default', $credentialsFile);
+                $credentialsProvider = \Aws\Credentials\CredentialProvider::memoize($credentialsProvider);
+                $this->credentials = $credentialsProvider;
+            }
+        }
+        return $this->credentials;
+    }
 
-		/* @var $result \PDOStatement */
-		try {
-			$result = $this->connectionLink->query((string) $sql);
-		} catch (\PDOException $e) {
-			throw new \Exception("Couldn't execute SQL statement: \n" .
-				$e->getMessage() . "\nSQL: '" . $sql . "'");
-		}
-		
-		$dbQueryResult = new DbQueryResult(function() use ($result) {
-					return $result->fetch();
-				});
-		$dbQueryResult->setNumRows($result->rowCount());
+    protected function getClient()
+    {
+        if (!isset($this->client)) {
+            $this->client = new \Aws\DynamoDb\DynamoDbClient([
+                'credentials' => $this->getCredentials(),
+                'region' => $this->params['region'],
+                'version' => 'latest',
+            ]);
+        }
+        return $this->client;
+    }
 
-		return $dbQueryResult;
-	}
+    protected function getMarshaler()
+    {
+        if (!isset($this->marshaler)) {
+            $this->marshaler = new \Aws\DynamoDb\Marshaler;
+        }
+        return $this->marshaler;
+    }
 
-	public function escapeString($str) {
-		$this->connect();
-		return $this->connectionLink->quote($str, \PDO::PARAM_STR);
-	}
+    /**
+     * @param string $table
+     * @param array $item
+     * @returns string Primary Key
+     */
+    public function insert($table, $primaryKey, $item)
+    {
+        if (!isset($item[$primaryKey])) {
+            $item[$primaryKey] = $this->getUniqueId();
+        }
+        try {
+            $this->getClient()->putItem([
+                'TableName' => $table,
+                'Item' => $this->getMarshaler()->marshalItem($item),
+                'ConditionExpression' => 'attribute_not_exists(' . $primaryKey . ')',
+                'ReturnConsumedCapacity' => 'TOTAL',
+            ]);
+            $result = [$primaryKey => $item[$primaryKey]];
+        } catch (\Aws\DynamoDb\Exception\DynamoDbException $e) {
+            if ($e->getAwsErrorCode() == 'ConditionalCheckFailedException') {
+                // Item already exists
+                $result = false;
+            } else {
+                throw new \Exception('Insert query failed', 0, $e);
+            }
+        }
+        return $result;
+    }
 
-	public function getInsertId() {
-		return $this->connectionLink->lastInsertId();
-	}
+    public function updateAttributes($table, $primaryKey, $item)
+    {
+        try {
+			foreach ($item as $attribute => $value) {
+				if ($attribute == $primaryKey) {
+					continue;
+				}
+                $attributeUpdates[$attribute] = [
+                    'Value' => [
+                        'S' => $value,
+                    ],
+                    'Action' => 'PUT',
+                ];
+            }
+            $result = $this->getClient()->updateItem([
+                'TableName' => $table,
+                'Key' => $this->getMarshaler()->marshalItem([
+                    $primaryKey => $item[$primaryKey],
+                ]),
+				'AttributeUpdates' => $attributeUpdates,
+                'ReturnConsumedCapacity' => 'TOTAL',
+            ]);
+            $result = true;
+        } catch (\Aws\DynamoDb\Exception\DynamoDbException $e) {
+            if ($e->getAwsErrorCode() == 'ConditionalCheckFailedException') {
+                // Item not found
+                $result = false;
+            } else {
+                throw new \Exception('Update query failed', 0, $e);
+            }
+        }
+        return $result;
+    }
 
-	/**
-	 * Returns a prepared select query builder
-	 * 
-	 * Run run() on the query builder to execute the query
-	 * 
-	 * @param mixed array|string $fields
-	 * @return SqlQueryBuilder_Select
-	 */
-	public function select($fields = array()) {
-		$sql = new SqlQueryBuilder_Select;
-		$sql->setDba($this);
-		$sql->select($fields);
-		return $sql;
-	}
-	
-	/**
-	 * Returns a prepared DELETE query builder
-	 * 
-	 * Run run() on the query builder to execute the query
-	 * 
-	 * @param mixed array|string $fields
-	 * @return \SqlQueryBuilder_Delete
-	 */
-	public function delete() {
-		$sql = new SqlQueryBuilder_Delete();
-		$sql->setDba($this);
-		return $sql;
-	}
-	
-	/**
-	 * Returns a prepared INSERT query builder
-	 * 
-	 * Run run() on the query builder to execute the query
-	 * 
-	 * @param mixed array|string $fields
-	 * @return \SqlQueryBuilder_Insert
-	 */
-	public function insert() {
-		$sql = new SqlQueryBuilder_Insert();
-		$sql->setDba($this);
-		return $sql;
-	}
-	
-	/**
-	 * Returns a prepared UPDATE query builder
-	 * 
-	 * Run run() on the query builder to execute the query
-	 * 
-	 * @param mixed array|string $fields
-	 * @return \SqlQueryBuilder_Update
-	 */
-	public function update($part = null) {
-		$sql = new SqlQueryBuilder_Update;
-		$sql->setDba($this);
-		$sql->update($part);
-		return $sql;
-	}
-	
+    public function delete($table, $primaryKey, $item)
+    {
+        try {
+            $result = $this->getClient()->deleteItem([
+                'TableName' => $table,
+                'Key' => $this->getMarshaler()->marshalItem([
+                    $primaryKey => $item[$primaryKey],
+                ]),
+                'ConditionExpression' => 'attribute_exists(' . $primaryKey . ')',
+                'ReturnConsumedCapacity' => 'TOTAL',
+            ]);
+            $result = true;
+        } catch (\Aws\DynamoDb\Exception\DynamoDbException $e) {
+            if ($e->getAwsErrorCode() == 'ConditionalCheckFailedException') {
+                // Item not found
+                $result = false;
+            } else {
+                throw new \Exception('Delete query failed', 0, $e);
+            }
+        }
+        return $result;
+    }
+
+    public function get($table, $primaryKey, $item)
+    {
+        try {
+            $result = $this->getClient()->getItem([
+                'TableName' => $table,
+                'Key' => $this->getMarshaler()->marshalItem([
+                    $primaryKey => $item[$primaryKey],
+                ]),
+                'ReturnConsumedCapacity' => 'TOTAL',
+            ]);
+            if ($result->get('Item') === null) {
+                throw new \Exception('Item not found');
+            }
+            $result = $this->getMarshaler()->unmarshalItem($result->get('Item'));
+        } catch (\Aws\DynamoDb\Exception\DynamoDbException $e) {
+            throw new \Exception('Get query failed', 0, $e);
+        } catch (\Exception $e) {
+            $result = null;
+        }
+        return $result;
+    }
+
+    /**
+     * Adds elements to a string set or number set
+     * 
+     * All the elements for each attribute (1st level only) must be of the same type
+     * 
+     * @param type $table
+     * @param type $primaryKey
+     * @param type $item
+     * @param type $elements
+     * @return boolean
+     * @throws \Exception
+     */
+    public function addSetElements($table, $primaryKey, $item, $elements)
+    {
+        try {
+            $attributeUpdates = [];
+            foreach ($elements as $attribute => $values) {
+                $type = is_string(current($values)) ? 'SS' : 'NS';
+                $values = array_map(function($value) use ($type) {
+                    return $type == 'SS' ? (string) $value : (float) $value;
+                }, $values);
+                $attributeUpdates[$attribute] = [
+                    'Value' => [
+                        $type => $values,
+                    ],
+                    'Action' => 'ADD',
+                ];
+            }
+            $result = $this->getClient()->updateItem([
+                'TableName' => $table,
+                'Key' => $this->getMarshaler()->marshalItem([
+                    $primaryKey => $item[$primaryKey],
+                ]),
+                'AttributeUpdates' => $attributeUpdates,
+                'ReturnConsumedCapacity' => 'TOTAL',
+            ]);
+            $result = true;
+        } catch (\Aws\DynamoDb\Exception\DynamoDbException $e) {
+            if ($e->getAwsErrorCode() == 'ConditionalCheckFailedException') {
+                // Item not found
+                $result = false;
+            } else {
+                throw new \Exception('Update query failed', 0, $e);
+            }
+        }
+        return $result;
+    }
+    
+    public function getUniqueId($length = 31)
+    {
+        // @todo Add a server unique prefix to uniqid
+        return substr(base_convert(hash('ripemd160', uniqid(true)), 16, 36), 0, $length);
+    }
+
 }

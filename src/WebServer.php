@@ -51,7 +51,7 @@ class WebServer extends Server {
 				$req = $this->newRequest();
 				$req->setServerVars($_SERVER); // @todo Break this up into its parts
 //				$req->setHeaders(apache_request_headers()); // Requires PHP 5.4 if not running as apache module
-//				$req->autoDetect();
+				$req->autoDetect();
 			}
 			$req->setServer($this);
 			$response = $this->getResponse($req);
@@ -68,7 +68,14 @@ class WebServer extends Server {
 			$response->status(HttpResponse::STATUS_INTERNAL_SERVER_ERROR);
 			$response->header('Content-Type', 'text/plain');
 			if ($this->isDevelopment()) {
-				$response->body($e->getMessage() . "\n" . $e->getTraceAsString());
+				$body = [];
+				$body[] = 'Uncaught exception:';
+				$body[] = $e->getMessage();
+				$body[] = $e->getTraceAsString();
+				if ($e->getPrevious()) {
+					$body[] = $e->getPrevious()->getMessage();
+				}
+				$response->body(implode("\n", $body));
 			} else {
 				$response->body('503 Internal Server Error');
 			}

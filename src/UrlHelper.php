@@ -61,7 +61,9 @@ class UrlHelper {
 	 * @return UrlHelper
 	 */
 	public function addSubpath($key, $subpath) {
-		$this->paths[(string)$key] = new UrlHelper($this->baseUrl . $subpath);
+		$host = parse_url($subpath, PHP_URL_HOST);
+		$urlPath = empty($host) ? $this->baseUrl . $subpath : $subpath;
+		$this->paths[(string)$key] = new UrlHelper($urlPath);
 		return $this->getSubpathUrlHelper($key);
 	}
 	
