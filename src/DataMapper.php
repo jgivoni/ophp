@@ -2,8 +2,6 @@
 
 namespace Ophp;
 
-use Ophp\SqlCriteriaBuilder as CB;
-
 /**
  * Standardized mapping between data storage and model
  * 
@@ -15,25 +13,15 @@ use Ophp\SqlCriteriaBuilder as CB;
 abstract class DataMapper {
 
 	/**
-	 * @var MySqlDatabaseAdapter
-	 */
-	protected $dba;
-
-	/**
 	 *
 	 * @var SqlCriteriaAssembler
 	 */
-	protected $queryAssembler;
 	protected $sharedModels = array();
 	protected $fields = array();
 	protected $tableName = '';
 	protected $primaryKey = '';
 
-	public function __construct() {
-		;
-	}
-
-	public function setDba(SqlDatabaseAdapterInterface $dba) {
+	public function setDba($dba) {
 		$this->dba = $dba;
 		return $this;
 	}
@@ -66,76 +54,6 @@ abstract class DataMapper {
 		$this->sharedModels[$model[$this->primaryKey]] = $model;
 		return $this;
 	}
-	
-	/**
-	 * Returns the query assembler
-	 * 
-	 * NB: The query assembler is only a criteria assembler for now
-	 * 
-	 * The first time this method is run, the criteria assembler will be instantiated
-	 * 
-	 * @return SqlCriteriaAssembler
-	 */
-	protected function getQueryAssembler()
-	{
-		if (!isset($this->queryAssembler)) {
-			$this->queryAssembler = (new SqlCriteriaAssembler)->setEscapeStringFunction(function($str){
-				return $this->dba->escapeString($str);
-			});
-		}
-		return $this->queryAssembler;
-	}
-
-	/**
-	 * Returns a new select query prepared to select from the correct table(s)
-	 * @return \Ophp\SqlQueryBuilder_Select
-	 */
-	protected function newSelectQuery() {
-		$query = new SqlQueryBuilder_Select;
-		$query->setQueryAssembler($this->getQueryAssembler());
-		foreach ($this->fields as $name => $config) {
-			$query->select(CB::field(isset($config['column']) ? $config['column'] : $name, $this->tableName));
-		}
-		$query->from("`{$this->tableName}`");
-
-		return $query;
-	}
-
-	/**
-	 * Returns a new update query, prepared to update the correct table
-	 * @return \Ophp\SqlQueryBuilder_Update
-	 */
-	protected function newUpdateQuery() {
-		$query = new SqlQueryBuilder_Update;
-		$query->setQueryAssembler($this->getQueryAssembler());
-		$query->update("`{$this->tableName}`");
-
-		return $query;
-	}
-	
-	/**
-	 * Returns a new insert query, prepared to insert a row into the correct table
-	 * @return \Ophp\SqlQueryBuilder_Insert
-	 */
-	protected function newInsertQuery() {
-		$query = new SqlQueryBuilder_Insert;
-		$query->setQueryAssembler($this->getQueryAssembler());
-		$query->into("`{$this->tableName}`");
-
-		return $query;
-	}
-
-	/**
-	 * Returns a new delete query, prepared to delete from the correct table
-	 * @return \Ophp\SqlQueryBuilder_Delete
-	 */
-	protected function newDeleteQuery() {
-		$query = new SqlQueryBuilder_Delete;
-		$query->setQueryAssembler($this->getQueryAssembler());
-		$query->from("`{$this->tableName}`");
-
-		return $query;
-	}
 
 	/**
 	 * Returns a model for the first row matched
@@ -143,27 +61,14 @@ abstract class DataMapper {
 	 * @return Model
 	 * @throws \OutOfBoundsException
 	 */
-	public function loadOne(SqlQueryBuilder_Select $query) {
-		$query->limit(1);
-		$models = $this->loadAll($query);
-		if (count($models) === 0) {
-			throw new \OutOfBoundsException('Row not found');
-		}
-
-		$model = current($models);
-		return $model;
-	}
+	abstract public function loadOne($query);
 
 	/**
 	 * Returns the count of rows matched by the select query
 	 * @param \Ophp\SqlQueryBuilder_Select $query
 	 * @return int
 	 */
-	public function count(SqlQueryBuilder_Select $query) {
-		$query->select('count(*)');
-		return $this->dba->query($query)
-			->first()['count(*)'];
-	}
+	abstract public function count($query);
 
 	/**
 	 * 
@@ -171,25 +76,14 @@ abstract class DataMapper {
 	 * @return Model
 	 * @throws Exception
 	 */
-	public function loadByPrimaryKey($pk) {
-		$query = $this->newSelectQuery()->comment(__METHOD__)
-				->where(CB::is(CB::field($this->getPkColumn(), $this->tableName), (int) $pk));
-		return $this->loadOne($query);
-	}
+	abstract public function loadByPrimaryKey($pk);
 
 	/**
 	 * 
 	 * @return array Of Model
 	 */
-	public function loadAll(SqlQueryBuilder_Select $query = null) {
-
-//		$query->countMatchedRows();
+	public function loadAll($query = null) {
 		$recordSet = $this->dba->query($query);
-
-		// Not used here, but for reference
-//		$result2 = $this->dba->query('SELECT FOUND_ROWS()');
-//		$matchedRows = (int) $result2->first()[0];
-//		$recordSet->setMatchedRows($matchedRows);
 
 		$models = array();
 		foreach ($recordSet as $record) {
@@ -205,25 +99,7 @@ abstract class DataMapper {
 	 * 
 	 * @param \Ophp\Model $model
 	 */
-	public function deleteByModel(Model $model) {
-		$criteria = CB::is($this->getPkColumn(), $model->{$this->primaryKey});
-		$result = $this->deleteByCriteria($criteria);
-		if ($result->getNumRows() !== 1) {
-			throw new Exception('Row not found');
-		}
-		return $this;
-	}
-
-	/**
-	 * 
-	 * @param SqlQueryBuilder_Delete $sql
-	 * @return DbQueryResult
-	 */
-	public function deleteByCriteria(SqlCriteriaNode $criteria) {
-		$query = $this->newDeleteQuery()
-				->where($criteria);
-		return $this->dba->query($query);
-	}
+	abstract public function deleteByModel(Model $model);
 
 	/**
 	 * 
@@ -234,12 +110,26 @@ abstract class DataMapper {
 		$model = $this->newModel();
 		foreach ($this->fields as $modelField => $config) {
 			$name = isset($config['column']) ? $config['column'] : $modelField;
-			switch ($config['type']) {
-				case 'int': isset($v) || $v = (int) $row[$name];
-				case 'timestamp': isset($v) || $v = strtotime($row[$name]);
-				default: isset($v) || $v = $row[$name];
+			if (array_key_exists($name, $row)) {
+				switch ($config['type']) {
+					case 'int':
+						$v = (int) $row[$name];
+						break;
+					case 'timestamp':
+						$v = strtotime($row[$name]);
+						break;
+					case 'array':
+						if (is_array($row[$name])) {
+							$v = $row[$name];
+						} elseif (method_exists($row[$name], 'toArray')) {
+							$v = $row[$name]->toArray();
+						}
+						break;
+					default:
+						$v = $row[$name];
+				}
+				$model->$modelField = $v;
 			}
-			$model->$modelField = $v;
 			unset($v);
 		}
 		return $model;

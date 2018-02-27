@@ -139,8 +139,8 @@ abstract class Server {
 		return $this;
 	}
 
-	public function newException($message, $previous = null) {
-		return new Exception($message, 0, $previous);
+	public function newException($message, $errorCode, $previous = null) {
+		return new \Exception($message, $errorCode, $previous);
 	}
 
 	/**

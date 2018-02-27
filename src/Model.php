@@ -13,27 +13,27 @@ namespace Ophp;
  * 
  */
 class Model implements \ArrayAccess {
-	
+
 	/**
 	 * ArrayAccess interface
 	 */
 	public function offsetExists($property) {
 		return isset($this->$property);
 	}
-	
+
 	/**
 	 * ArrayAccess interface
 	 */
 	public function offsetGet($property) {
-		$getter = 'get'.  ucfirst($property);
+		$getter = 'get' . ucfirst($property);
 		return $this->$getter();
 	}
-	
+
 	/**
 	 * ArrayAccess interface
 	 */
 	public function offsetSet($property, $value) {
-		$setter = 'set'.  ucfirst($property);
+		$setter = 'set' . ucfirst($property);
 		$this->$setter($value);
 	}
 
@@ -43,14 +43,15 @@ class Model implements \ArrayAccess {
 	public function offsetUnset($property) {
 		unset($this->$property);
 	}
-	
+
 	public function __get($property) {
-		$getter = 'get'.  ucfirst($property);
+		$getter = 'get' . ucfirst($property);
 		return $this->$getter();
 	}
-	
+
 	public function __set($property, $value) {
-		$setter = 'set'.  ucfirst($property);
+		$setter = 'set' . ucfirst($property);
 		$this->$setter($value);
 	}
+
 }
