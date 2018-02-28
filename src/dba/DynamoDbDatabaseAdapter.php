@@ -130,14 +130,14 @@ class DynamoDbDatabaseAdapter {
 		return $result;
 	}
 
-	public function delete($table, $primaryKey, $item) {
+	public function delete($table, $item, $partitionKey) {
 		try {
 			$result = $this->getClient()->deleteItem([
 				'TableName' => $table,
 				'Key' => $this->getMarshaler()->marshalItem([
-					$primaryKey => $item[$primaryKey],
+					$partitionKey => $item[$partitionKey],
 				]),
-				'ConditionExpression' => 'attribute_exists(' . $primaryKey . ')',
+				'ConditionExpression' => 'attribute_exists(' . $partitionKey . ')',
 				'ReturnConsumedCapacity' => 'TOTAL',
 			]);
 			$result = true;
@@ -184,13 +184,12 @@ class DynamoDbDatabaseAdapter {
 	 * All the elements for each attribute (1st level only) must be of the same type
 	 * 
 	 * @param type $table
-	 * @param type $primaryKey
-	 * @param type $item
+	 * @param type $key
 	 * @param type $elements
 	 * @return boolean
 	 * @throws \Exception
 	 */
-	public function addSetElements($table, $primaryKey, $item, $elements) {
+	public function addSetElements($table, $key, $elements) {
 		try {
 			$attributeUpdates = [];
 			foreach ($elements as $attribute => $values) {
@@ -207,9 +206,51 @@ class DynamoDbDatabaseAdapter {
 			}
 			$result = $this->getClient()->updateItem([
 				'TableName' => $table,
-				'Key' => $this->getMarshaler()->marshalItem([
-					$primaryKey => $item[$primaryKey],
-				]),
+				'Key' => $this->getMarshaler()->marshalItem($key),
+				'AttributeUpdates' => $attributeUpdates,
+				'ReturnConsumedCapacity' => 'TOTAL',
+			]);
+			$result = true;
+		} catch (\Aws\DynamoDb\Exception\DynamoDbException $e) {
+			if ($e->getAwsErrorCode() == 'ConditionalCheckFailedException') {
+				// Item not found
+				$result = false;
+			} else {
+				throw new \Exception('Update query failed', 0, $e);
+			}
+		}
+		return $result;
+	}
+	
+	/**
+	 * Remove elements to a string set or number set
+	 * 
+	 * All the elements for each attribute (1st level only) must be of the same type
+	 * 
+	 * @param type $table
+	 * @param type $key
+	 * @param type $elements
+	 * @return boolean
+	 * @throws \Exception
+	 */
+	public function removeSetElements($table, $key, $elements) {
+		try {
+			$attributeUpdates = [];
+			foreach ($elements as $attribute => $values) {
+				$type = is_string(current($values)) ? 'SS' : 'NS';
+				$values = array_map(function($value) use ($type) {
+					return $type == 'SS' ? (string) $value : (float) $value;
+				}, $values);
+				$attributeUpdates[$attribute] = [
+					'Value' => [
+						$type => $values,
+					],
+					'Action' => 'DELETE',
+				];
+			}
+			$result = $this->getClient()->updateItem([
+				'TableName' => $table,
+				'Key' => $this->getMarshaler()->marshalItem($key),
 				'AttributeUpdates' => $attributeUpdates,
 				'ReturnConsumedCapacity' => 'TOTAL',
 			]);

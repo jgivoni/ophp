@@ -22,8 +22,10 @@ abstract class NoSqlDataMapper extends DataMapper {
 	 */
 	public function loadOne($key) {
 		$record = $this->dba->get($this->tableName, $key);
-		$model = $this->mapRowToModel($record);
-		return $model;
+		if (isset($record)) {
+			$model = $this->mapRowToModel($record);
+		}
+		return isset($model) ? $model : null;
 	}
 
 	public function loadByPrimaryKey($pk) {
@@ -42,5 +44,5 @@ abstract class NoSqlDataMapper extends DataMapper {
 		}
 		return $arr;
 	}
-	
+
 }
