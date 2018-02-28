@@ -11,7 +11,8 @@ class View {
 	protected $newViewFunction;
 	protected $templateBase;
 	protected $parent;
-	
+	protected $toStringException;
+
 	/**
 	 * 
 	 * @param string $template Template file, relative to base
@@ -27,11 +28,11 @@ class View {
 	public function setParent($parent) {
 		$this->parent = $parent;
 	}
-	
+
 	public function getParent() {
 		return $this->parent;
 	}
-	
+
 	public function top() {
 		return isset($this->parent) ? $this->parent : $this;
 	}
@@ -49,19 +50,18 @@ class View {
 		return isset($this->params[$key]) ? $this->params[$key] : null;
 	}
 
-	protected function getParams()
-	{
+	protected function getParams() {
 		return $this->params;
 	}
-		
+
 	public function setTemplateBase($templateBase) {
 		$this->templateBase = $templateBase;
 	}
-	
+
 	protected function getTemplateBase() {
 		return $this->templateBase;
 	}
-	
+
 	protected function getFullTemplatePath() {
 		return $this->templateBase . $this->template . '.php';
 	}
@@ -75,23 +75,44 @@ class View {
 		$p = $this->getViewPrinter();
 		extract($this->getParams());
 		ob_start();
-		include $this->getFullTemplatePath();
+        try {
+            include $this->getFullTemplatePath();
+        } catch (\Exception $e) {
+            ob_end_clean();
+            throw $e;
+        }
 		return $this->renderedView = ob_get_clean();
 	}
 
 	public function __toString() {
-		return isset($this->renderedView) ? $this->renderedView : $this->render();
+		$this->toStringException = null;
+		try {
+			return isset($this->renderedView) ? $this->renderedView : $this->render();
+		} catch (\Exception $e) {
+			$this->toStringException = $e;
+			return '\00';
+		}
 	}
 
+    /**
+     * 
+     * @param type $template
+     * @return \Ophp\View
+     */
 	public function fragment($template) {
 		$fragment = new View($template, $this->getTemplateBase());
 		$fragment->setParent($this->top());
 		return $fragment;
 	}
-	
+
 	protected function getViewPrinter() {
-		return isset($this->viewPrinter) ? 
-			$this->viewPrinter :
-			$this->viewPrinter = new ViewPrinter;
+		return isset($this->viewPrinter) ?
+				$this->viewPrinter :
+				$this->viewPrinter = new ViewPrinter;
 	}
+
+	public function getToStringException() {
+		return $this->toStringException;
+	}
+
 }

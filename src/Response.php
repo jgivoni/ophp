@@ -27,6 +27,12 @@ class Response {
 	 */
 	public function body($body) {
 		$this->body = (string) $body;
+		if ($body instanceof View) {
+			$exception = $body->getToStringException();
+			if (isset($exception)) {
+				throw new \Exception('Failed to render view', 0, $exception);
+			}
+		}
 		return $this;
 	}
     

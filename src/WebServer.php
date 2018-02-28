@@ -18,19 +18,19 @@ class WebServer extends Server {
 	 */
 	protected $baseUrl;
 
-    /**
-     *
-     * @var type 
-     */
+	/**
+	 *
+	 * @var type 
+	 */
 	protected $urlHelper;
-    
-    public function __construct() {
-        parent::__construct();
-		
+
+	public function __construct() {
+		parent::__construct();
+
 		$this->baseUrl = $this->config->baseUrl;
 	}
-    
-    /**
+
+	/**
 	 * Request factory
 	 * The server knows what kind of request is appropriate here
 	 * @return LampRequest
@@ -38,8 +38,8 @@ class WebServer extends Server {
 	public function newRequest() {
 		return new requests\HttpRequest();
 	}
-    
-    /**
+
+	/**
 	 * Handles a request by routing it to a controller and sending the response
 	 * to the client
 	 * 
@@ -59,9 +59,9 @@ class WebServer extends Server {
 			//$this->shutDown();
 		} catch (NotFoundException $e) {
 			$response = (new HttpResponse())
-				->status(HttpResponse::STATUS_NOT_FOUND)
-				->header('Content-Type', 'text/plain')
-				->body('404 Page Not Found');
+					->status(HttpResponse::STATUS_NOT_FOUND)
+					->header('Content-Type', 'text/plain')
+					->body('404 Page Not Found');
 			$this->sendResponse($response);
 		} catch (\Exception $e) {
 			$response = new HttpResponse();
@@ -70,11 +70,7 @@ class WebServer extends Server {
 			if ($this->isDevelopment()) {
 				$body = [];
 				$body[] = 'Uncaught exception:';
-				$body[] = $e->getMessage();
-				$body[] = $e->getTraceAsString();
-				if ($e->getPrevious()) {
-					$body[] = $e->getPrevious()->getMessage();
-				}
+				$body[] = $this->getExceptionAsString($e);
 				$response->body(implode("\n", $body));
 			} else {
 				$response->body('503 Internal Server Error');
@@ -82,8 +78,18 @@ class WebServer extends Server {
 			$this->sendResponse($response);
 		}
 	}
-    
-    /**
+
+	protected function getExceptionAsString($e) {
+		$body = [];
+		$body[] = $e->getMessage();
+		$body[] = $e->getTraceAsString();
+		if ($e->getPrevious()) {
+			$body[] = $this->getExceptionAsString($e->getPrevious());
+		}
+		return implode("\n", $body);
+	}
+
+	/**
 	 * Sends the response to the client
 	 * 
 	 * @param HttpResponse $res
@@ -99,8 +105,8 @@ class WebServer extends Server {
 		}
 		echo (string) $res;
 	}
-    
-    /**
+
+	/**
 	 * Returns a new router object
 	 * In this server, we use url-routers, which select routes only based on the url
 	 * Override this in app server
@@ -109,7 +115,7 @@ class WebServer extends Server {
 	public function newRouter() {
 		return new Router\UrlRouter();
 	}
-    
+
 	public function getUrlHelper() {
 		if (!isset($this->urlHelper)) {
 			$this->urlHelper = new UrlHelper($this->baseUrl);
@@ -120,4 +126,5 @@ class WebServer extends Server {
 		}
 		return $this->urlHelper;
 	}
+
 }

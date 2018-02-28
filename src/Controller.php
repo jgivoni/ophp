@@ -26,7 +26,7 @@ abstract class Controller implements ControllerInterface {
 
 	/**
 	 *
-	 * @return HttpRequest
+	 * @return requests\HttpRequest
 	 */
 	protected function getRequest() {
 		return $this->getServer()->getRequest();

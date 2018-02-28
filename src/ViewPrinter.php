@@ -27,6 +27,12 @@ class ViewPrinter {
 
 	public function html() {
 		echo (string) $this->value;
+		if ($this->value instanceof View) {
+			$exception = $this->value->getToStringException();
+			if (isset($exception)) {
+				throw new \Exception('Failed to render view', 0, $exception);
+			}
+		}
 		return $this;
 	}
 
