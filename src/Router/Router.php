@@ -35,7 +35,7 @@ abstract class Router {
 	 * @param HttpRequest $req
 	 * @return BaseController
 	 */
-	abstract function getController(\Ophp\requests\HttpRequest $req);
+	abstract function getController(\Ophp\requests\Request $req);
 	
 	/**
 	 * Reverse route lookup

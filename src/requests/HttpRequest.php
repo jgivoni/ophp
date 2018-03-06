@@ -67,6 +67,17 @@ class HttpRequest extends Request {
 		return isset($this->params['post']) ? $this->params['post'] : array();
 	}
 
+	/**
+	 * Returns the part of the url after the ?
+	 */
+	public function getQuery() {
+		$query = parse_url($this->url, PHP_URL_QUERY);
+		if ($query === false) {
+			throw new \Ophp\Exception('Malformed url, could not retrieve query string');
+		}
+		return $query;
+	}
+
 	public function isAjax() {
 		//return true;
 		return isset($this->headers['X-Requested-With']) && $this->headers['X-Requested-With'] === 'XMLHttpRequest';

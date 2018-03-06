@@ -6,17 +6,31 @@ namespace Ophp;
  * Encapsulates a generic http response
  */
 class Response {
-    const STATUS_ERROR = 'ERROR';
-     
-    protected $status;
-    
-    public $body = '';
-    
-    public function status($status) {
-		$this->status = $status;
-		return $this;
+
+	const STATUS_ERROR = 'ERROR';
+
+	protected $status;
+	protected $error;
+	public $body = '';
+
+	public function status($status = null) {
+		if (isset($status)) {
+			$this->status = $status;
+			return $this;
+		} else {
+			return $this->status;
+		}
 	}
-    
+
+	public function error($error = null) {
+		if (isset($error)) {
+			$this->error = self::STATUS_ERROR;
+			return $this;
+		} else {
+			return $this->error == self::STATUS_ERROR;
+		}
+	}
+
 	/**
 	 * Sets the body of the request to the string $body
 	 * 
@@ -35,8 +49,9 @@ class Response {
 		}
 		return $this;
 	}
-    
-    public function __toString() {
+
+	public function __toString() {
 		return (string) $this->body;
 	}
+
 }

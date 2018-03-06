@@ -45,7 +45,7 @@ class WebServer extends Server {
 	 * 
 	 * @param HttpRequest $req Request object
 	 */
-	public function handleRequest(requests\HttpRequest $req = null) {
+	public function handleRequest(requests\Request $req = null) {
 		try {
 			if (empty($req)) {
 				$req = $this->newRequest();

@@ -37,8 +37,7 @@ abstract class Controller implements ControllerInterface {
 	 * @return \Ophp\HttpResponse
 	 */
 	protected function newResponse() {
-		$res = !$this->getRequest()->isAjax() ? new \Ophp\HtmlResponse : new \Ophp\JsonResponse;
-		return $res;
+        return new Response;
 	}
 	
 }

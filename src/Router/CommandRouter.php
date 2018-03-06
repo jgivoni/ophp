@@ -2,7 +2,11 @@
 
 namespace Ophp\Router;
 
-class UrlRouter extends Router {
+/**
+ * A router takes a url and finds a controller that will handle the request
+ *  
+ */
+class CommandRouter extends Router {
 	/**
 	 * Returns the controller of the first matching route, based only on the url
 	 * 
@@ -11,7 +15,7 @@ class UrlRouter extends Router {
 	 */
 	public function getController(\Ophp\requests\Request $req) {
 		foreach ($this->routes as $route) {
-			$matches = $route->matches($req->url);
+			$matches = $route->matches($req->command);
 			if ($matches !== false) {
 				$controller = $route->getController($matches);
 				if ($controller instanceof MiddlewareController && $controller->continue()) {
@@ -21,6 +25,6 @@ class UrlRouter extends Router {
 				}
 			}
 		}
-		throw new NotFoundException('No route found for url: '.$req->url);
+		throw new NotFoundException('No route found for command: '.$req->command);
 	}
 }
