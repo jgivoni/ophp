@@ -22,14 +22,7 @@ class DynamoDbDatabaseAdapter {
 	 */
 	public function __construct($options = []) {
 		if (!$options instanceof \Ohp\Options) {
-			$obj = new AmazonDbOptions();
-			if (isset($options['credentialsFile'])) {
-				$obj->credentialsFile = $options['credentialsFile'];
-			}
-			if (isset($options['region'])) {
-				$obj->region = $options['region'];
-			}
-			$options = $obj;
+			$options = new AmazonDbOptions($options);
 		}
 		$this->options = $options;
 	}
@@ -97,10 +90,10 @@ class DynamoDbDatabaseAdapter {
 		return isset($result) ? $result : null;
 	}
 
-	public function updateAttributes($table, $primaryKey, $item) {
+	public function updateAttributes($table, $item, $partitionKey) {
 		try {
 			foreach ($item as $attribute => $value) {
-				if ($attribute == $primaryKey) {
+				if ($attribute == $partitionKey) {
 					continue;
 				}
 				$attributeUpdates[$attribute] = [
@@ -113,7 +106,7 @@ class DynamoDbDatabaseAdapter {
 			$result = $this->getClient()->updateItem([
 				'TableName' => $table,
 				'Key' => $this->getMarshaler()->marshalItem([
-					$primaryKey => $item[$primaryKey],
+					$partitionKey => $item[$partitionKey],
 				]),
 				'AttributeUpdates' => $attributeUpdates,
 				'ReturnConsumedCapacity' => 'TOTAL',
@@ -178,6 +171,42 @@ class DynamoDbDatabaseAdapter {
 		return $result;
 	}
 
+	/**
+	 * 
+	 * @param string $table
+	 * @param array $key attribute=>value pairs
+	 * @return type
+	 * @throws \Exception
+	 */
+	public function getBatch($table, $keys) {
+		$keysMarshalled = array_map(function($key) {
+			return $this->getMarshaler()->marshalItem($key);
+		}, $keys);
+		try {
+			$result = $this->getClient()->batchGetItem([
+				'RequestItems' => [
+					$table => [
+						'Keys' => $keysMarshalled,
+					]
+				],
+				'ReturnConsumedCapacity' => 'TOTAL',
+			]);
+			$items = $result->get('Responses');
+			if (isset($items[$table])) {
+				$results = array_map(function($item) {
+					return $this->getMarshaler()->unmarshalItem($item);
+				}, $items[$table]);
+			} else {
+                $results = [];
+            }
+		} catch (\Aws\DynamoDb\Exception\DynamoDbException $e) {
+			throw new \Exception('GetBatch query failed', 0, $e);
+		} catch (\Exception $e) {
+			$results = null;
+		}
+		return $results;
+	}
+	
 	/**
 	 * Adds elements to a string set or number set
 	 * 

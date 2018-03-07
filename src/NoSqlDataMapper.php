@@ -28,10 +28,29 @@ abstract class NoSqlDataMapper extends DataMapper {
 		return isset($model) ? $model : null;
 	}
 
+	public function loadMany($keys) {
+		$records = $this->dba->getBatch($this->tableName, $keys);
+		$models = [];
+		foreach ($records as $record) {
+			$models[] = $this->mapRowToModel($record);
+		}
+		return $models;
+	}
+
 	public function loadByPrimaryKey($pk) {
 		return $this->loadOne([
 					$this->primaryKey => $pk,
 		]);
+	}
+
+	public function loadByPrimaryKeys($pks) {
+		$keys = [];
+		foreach ($pks as $pk) {
+			$keys[] = [
+				$this->primaryKey => $pk,
+			];
+		}
+		return $this->loadMany($keys);
 	}
 
 	protected function modelToArray($model) {
