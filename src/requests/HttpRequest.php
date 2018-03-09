@@ -19,7 +19,6 @@ class HttpRequest extends Request {
 	const METHOD_PUT = 'PUT';
 	const METHOD_HEAD = 'HEAD';
 
-
 	public function setServer($server) {
 		$this->server = $server;
 	}
@@ -37,6 +36,14 @@ class HttpRequest extends Request {
 	public function setHeaders($headers) {
 		$this->headers = $headers;
 		return $this;
+	}
+
+	public function addHeader($name, $value) {
+		$this->headers[$name] = $value;
+	}
+	
+	public function getHeader($name) {
+		return isset($this->headers[$name]) ? $this->headers[$name] : null;
 	}
 
 	public function isGet() {
@@ -94,4 +101,5 @@ class HttpRequest extends Request {
 			$this->params['post'] = $_POST;
 		}
 	}
+
 }
