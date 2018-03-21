@@ -13,8 +13,9 @@ class HttpRequest extends Request {
 	protected $server_vars;
 	protected $headers;
 	protected $method;
-
-	const METHOD_GET = 'GET';
+    protected $cookies;
+    
+    const METHOD_GET = 'GET';
 	const METHOD_POST = 'POST';
 	const METHOD_PUT = 'PUT';
 	const METHOD_HEAD = 'HEAD';
@@ -30,23 +31,49 @@ class HttpRequest extends Request {
 
 	public function setServerVars($server_vars) {
 		$this->server_vars = $server_vars;
+        foreach ($server_vars as $key => $value) {
+            if (strpos($key, 'HTTP') === 0) {
+                $headerName = substr($key, 5);
+                $this->addHeader($headerName, $value);
+            }
+        }
 		return $this;
 	}
 
-	public function setHeaders($headers) {
+    public function setHeaders($headers) {
 		$this->headers = $headers;
 		return $this;
 	}
 
 	public function addHeader($name, $value) {
+        $name = str_replace('_', '-', strtolower($name));
 		$this->headers[$name] = $value;
 	}
 	
 	public function getHeader($name) {
+        $name = str_replace('_', '-', strtolower($name));
 		return isset($this->headers[$name]) ? $this->headers[$name] : null;
 	}
-
-	public function isGet() {
+    
+    public function getCookie($name) {
+        if (!isset($this->cookies)) {
+            $cookies = [];
+            $cookieHeader = $this->getHeader('Cookie');
+            if (isset($cookieHeader)) {
+                $cookielines = explode(';', $cookieHeader);
+                foreach ($cookielines as $cookieline) {
+                    $cookieParts = explode('=', $cookieline);
+                    $cookieName = urldecode(trim($cookieParts[0]));
+                    $cookieValue = urldecode(trim($cookieParts[1]));
+                    $cookies[$cookieName] = $cookieValue;
+                }
+            }
+            $this->cookies = $cookies;
+        }
+        return isset($this->cookies[$name]) ? $this->cookies[$name] : null;
+    }
+        
+    public function isGet() {
 		return $this->method == self::METHOD_GET;
 	}
 

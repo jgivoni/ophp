@@ -22,7 +22,7 @@ class EnvironmentConfig extends DevelopmentConfig
      * @var array
      */
     protected $databaseConnections = array(
-        'replanner' => array(
+        'mydb' => array(
             'host' => 'localhost',
             'database' => 'myapp',
             'user' => 'user',

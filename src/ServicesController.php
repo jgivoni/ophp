@@ -5,7 +5,7 @@ namespace Ophp;
 abstract class ServicesController implements ControllerInterface {
 	
 	function __construct() {
-		$this->setDbService('localhost', 'replanner', 'webapp', 'BFvmny5awwFvbvRt');
+		$this->setDbService('localhost', 'jot', 'webapp', 'BFvmny5awwFvbvRt');
 	}
 	// Shutdown event notification
 	function shutdown() {

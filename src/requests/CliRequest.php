@@ -16,6 +16,7 @@ class CliRequest extends Request {
 
 	function autoDetect() {
 		$arguments = $_SERVER['argv'];
+		$this->setServerVars($_SERVER);
 
 		$this->command = basename(array_shift($arguments), '.php');
 
