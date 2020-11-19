@@ -16,7 +16,7 @@ abstract class NoSqlDataMapper extends DataMapper {
 
 	/**
 	 * Returns a model for the first row matched
-	 * @param \Ophp\SqlQueryBuilder_Select $query
+	 * @param array $key
 	 * @return Model
 	 * @throws \OutOfBoundsException
 	 */
@@ -63,5 +63,9 @@ abstract class NoSqlDataMapper extends DataMapper {
 		}
 		return $arr;
 	}
+
+    public function getConsumedCapacity() {
+        return $this->dba->getConsumedCapacity($this->tableName);
+    }
 
 }
