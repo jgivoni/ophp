@@ -45,10 +45,10 @@ class RunnerTest extends TestCase
      */
     public function testRunnerWithSingleCallable($callable)
     {
-        $runner = new Runner($callable);
+        $runner = runner($callable);
         $result = $runner();
 
-        $this->assertEquals('getalife', $result[0]);
+        $this->assertEquals('getalife', $result);
     }
 
     public function dataProvider()

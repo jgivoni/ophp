@@ -16,7 +16,7 @@ class ValidatorTest extends TestCase
      */
     public function testValidator($input, $callables, $expectedResult)
     {
-        $runner = new Validator(...$callables);
+        $runner = validator(...$callables);
         $actualResult = $runner($input);
 
         $this->assertEquals($expectedResult, $actualResult);

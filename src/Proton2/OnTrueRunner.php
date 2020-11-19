@@ -23,8 +23,3 @@ class OnTrueRunner extends Runner
         parent::__construct($newCallables);
     }
 }
-
-function onTrue(...$callables)
-{
-    return new OnTrueRunner(...$callables);
-}

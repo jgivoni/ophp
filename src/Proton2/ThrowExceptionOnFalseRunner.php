@@ -20,8 +20,3 @@ class ThrowExceptionOnFalseRunner extends Runner
         parent::__construct($callables);
     }
 }
-
-function throwExceptionOnFalse(...$callables)
-{
-    return new ThrowExceptionOnFalseRunner(...$callables);
-}

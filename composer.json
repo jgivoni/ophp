@@ -9,7 +9,10 @@
     "autoload": {
         "psr-4": {
             "Ophp\\": "src/"
-        }
+        },
+        "files": [
+            "src/Proton2/functions.php"
+        ]
     },
     "config": {
         "platform": {

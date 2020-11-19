@@ -1,5 +1,11 @@
 <?php
 
+namespace MyApp;
+
+use function Ophp\Proton2\pipeline;
+use function Ophp\Proton2\runner;
+use function Ophp\Proton2\validator;
+
 /**
  * Operations are executed in order no matter what
  * Output from one operation is input to the next
@@ -8,19 +14,22 @@
  *      onException() only executes its operation if the previous operation threw an exception
  *      throwExceptionOnFalse() throws an exception if its operation returns false
  */
+class Transaction
+{
 
-$validateTransaction = \Ophp\Proton2\runner(
-    \Ophp\Proton2\throwExceptionOnFalse(
+}
+
+$transaction = new Transaction();
+
+$result = runner(
+    validator(
         'transactionIsProcessing',
-        \Ophp\Proton2\onTrue('transactionCaptureStatusIsNotSet')
+        'transactionCaptureStatusIsNotSet'
+    ),
+    pipeline(
+        'createRequest',
+        'loadResponse',
+        'parseResponse',
     )
-);
-
-$operation = new \Ophp\Proton2\Runner(
-    $validateTransaction,
-    'createRequest',
-    'getResponse',
-    'parseResponse',
-);
-
-$result = $operation($transaction);
+)
+($transaction);

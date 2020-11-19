@@ -7,33 +7,19 @@
 
 namespace Ophp\Proton2;
 
-use Ophp\Exception;
-
 /**
  * Executes all callables with the result of one as the input to the next
  */
 class Pipeline extends Runner
 {
-    public function execute(...$params)
+
+    protected function onExecute($input)
     {
-        foreach ($this->callables as $callable) {
-            try {
-                $result = call_user_func($callable, ...$params);
-            } catch (Exception $e) {
-                $result = new ExceptionResult($e);
-            }
-            $params = [$result];
-        }
+        $this->inputs[0] = $input;
+        $this->outputs = array_fill(0, count($this->callables), null);
 
-        if ($result instanceof ExceptionResult) {
-            throw $result->getException();
+        for ($i = 1; $i < count($this->callables); $i++) {
+            $this->inputs[$i] = [&$this->outputs[$i - 1]];
         }
-
-        return $result;
     }
-}
-
-function pipeline(...$callables)
-{
-    return new Pipeline(...$callables);
 }
